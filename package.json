@@ -33,6 +33,7 @@
     "typescript": "^4.4.2"
   },
   "dependencies": {
-    "http-proxy": "^1.18.1"
+    "http-proxy": "^1.18.1",
+    "yaml": "^1.10.2"
   }
 }

@@ -9,5 +9,12 @@
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended",
     "airbnb-base/legacy"
-  ]
+  ],
+  "rules": {
+    "no-console": "off",
+    "lines-between-class-members": "off"
+  },
+  "globals": {
+    "NodeJS": true
+  }
 }
