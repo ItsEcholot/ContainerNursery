@@ -1,5 +1,8 @@
 import { ProxyTarget } from 'http-proxy';
 import internal from 'stream';
+import DockerManager from './DockerManager';
+
+const dockerManager = new DockerManager();
 
 export default class ProxyHost {
   private domain: string;
@@ -10,6 +13,7 @@ export default class ProxyHost {
 
   private activeSockets: Set<internal.Duplex> = new Set();
   private connectionTimeoutId: NodeJS.Timeout | null = null;
+  private containerRunning: boolean | undefined = undefined;
 
   constructor(
     domain: string,
@@ -24,11 +28,30 @@ export default class ProxyHost {
     this.proxyPort = proxyPort;
     this.timeoutSeconds = timeoutSeconds;
     this.resetConnectionTimeout();
+    dockerManager.isContainerRunning(this.containerName).then(res => {
+      this.containerRunning = res;
+    });
   }
 
-  private stopHost(): void {
-    console.log(`🛏 Putting ${this.containerName} to sleep`);
-    // TODO
+  private async stopHost(): Promise<void> {
+    clearTimeout(this.connectionTimeoutId as NodeJS.Timeout);
+    this.connectionTimeoutId = null;
+
+    if (await dockerManager.isContainerRunning(this.containerName)) {
+      console.log(`🛏 Putting ${this.containerName} to sleep`);
+      await dockerManager.stopContainer(this.containerName);
+    }
+    this.containerRunning = false;
+  }
+
+  private async startHost(): Promise<void> {
+    if (!(await dockerManager.isContainerRunning(this.containerName))) {
+      console.log(`⏰ Waking ${this.containerName} up`);
+      await dockerManager.startContainer(this.containerName);
+    }
+
+    this.containerRunning = true;
+    this.resetConnectionTimeout();
   }
 
   private resetConnectionTimeout(): void {
@@ -59,11 +82,19 @@ export default class ProxyHost {
   }
 
   public newConnection(): void {
-    this.resetConnectionTimeout();
+    if (!this.containerRunning) {
+      this.startHost();
+    } else {
+      this.resetConnectionTimeout();
+    }
   }
 
   public newSocketConnection(socket: internal.Duplex): void {
-    this.resetConnectionTimeout();
+    if (!this.containerRunning) {
+      this.startHost();
+    } else {
+      this.resetConnectionTimeout();
+    }
 
     this.activeSockets.add(socket);
     socket.once('close', () => {

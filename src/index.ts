@@ -49,7 +49,6 @@ server.on('upgrade', (req, socket, head) => {
 });
 
 proxy.on('error', (err, req, res) => {
-  console.error(`Proxying request for ${req.headers.host} produced ${err}`);
   if (!req.headers.host) {
     res.writeHead(400, { 'Content-Type': 'text/plain' });
     res.write('Error: Request header host wasn\t specified');
@@ -57,9 +56,11 @@ proxy.on('error', (err, req, res) => {
     return;
   }
   const proxyHost = proxyHosts.get(req.headers.host as string);
-  res.writeHead(500, { 'Content-Type': 'text/plain' });
-  res.write(`Error: Host is not reachable ${JSON.stringify(proxyHost?.getTarget())}`);
-  res.end();
+  if (res.writeHead) {
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    res.write(`Error: Host is not reachable ${JSON.stringify(proxyHost?.getTarget())}`);
+    res.end();
+  }
 });
 
 server.listen(80);

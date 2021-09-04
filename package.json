@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/ItsEcholot/ContainerNursery#readme",
   "devDependencies": {
+    "@types/dockerode": "^3.2.7",
     "@types/http-proxy": "^1.17.7",
     "@types/node": "^16.7.10",
     "@typescript-eslint/eslint-plugin": "^4.30.0",
@@ -33,6 +34,7 @@
     "typescript": "^4.4.2"
   },
   "dependencies": {
+    "dockerode": "^3.3.0",
     "http-proxy": "^1.18.1",
     "yaml": "^1.10.2"
   }
