@@ -21,8 +21,11 @@
   "homepage": "https://github.com/ItsEcholot/ContainerNursery#readme",
   "devDependencies": {
     "@types/dockerode": "^3.2.7",
+    "@types/ejs": "^3.1.0",
+    "@types/express": "^4.17.13",
     "@types/http-proxy": "^1.17.7",
     "@types/node": "^16.7.10",
+    "@types/node-fetch": "^2.5.12",
     "@typescript-eslint/eslint-plugin": "^4.30.0",
     "@typescript-eslint/parser": "^4.30.0",
     "eslint": "^7.32.0",
@@ -35,7 +38,10 @@
   },
   "dependencies": {
     "dockerode": "^3.3.0",
+    "ejs": "^3.1.6",
+    "express": "^4.17.1",
     "http-proxy": "^1.18.1",
+    "node-fetch": "^2.6.2",
     "yaml": "^1.10.2"
   }
 }

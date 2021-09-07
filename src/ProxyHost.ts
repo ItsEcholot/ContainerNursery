@@ -1,5 +1,6 @@
 import { ProxyTarget } from 'http-proxy';
 import internal from 'stream';
+import fetch from 'node-fetch';
 import DockerManager from './DockerManager';
 
 const dockerManager = new DockerManager();
@@ -14,6 +15,7 @@ export default class ProxyHost {
   private activeSockets: Set<internal.Duplex> = new Set();
   private connectionTimeoutId: NodeJS.Timeout | null = null;
   private containerRunning: boolean | undefined = undefined;
+  private containerRunningChecking = false;
 
   constructor(
     domain: string,
@@ -34,24 +36,37 @@ export default class ProxyHost {
   }
 
   private async stopHost(): Promise<void> {
+    this.containerRunning = false;
     clearTimeout(this.connectionTimeoutId as NodeJS.Timeout);
     this.connectionTimeoutId = null;
 
     if (await dockerManager.isContainerRunning(this.containerName)) {
-      console.log(`🛏 Putting ${this.containerName} to sleep`);
+      console.log(`🛏  Putting ${this.containerName} to sleep`);
       await dockerManager.stopContainer(this.containerName);
     }
-    this.containerRunning = false;
   }
 
   private async startHost(): Promise<void> {
-    if (!(await dockerManager.isContainerRunning(this.containerName))) {
+    if (!this.containerRunningChecking
+        && !(await dockerManager.isContainerRunning(this.containerName))) {
       console.log(`⏰ Waking ${this.containerName} up`);
       await dockerManager.startContainer(this.containerName);
-    }
+      this.containerRunningChecking = true;
+      const checkInterval = setInterval(() => {
+        this.resetConnectionTimeout();
 
-    this.containerRunning = true;
-    this.resetConnectionTimeout();
+        fetch(`http://${this.proxyHost}:${this.proxyPort}`, {
+          method: 'HEAD'
+        }).then(res => {
+          if (res.status === 200 || (res.status >= 300 && res.status <= 399)) {
+            clearInterval(checkInterval);
+            this.containerRunningChecking = false;
+            this.containerRunning = true;
+          }
+        // eslint-disable-next-line no-unused-vars
+        }).catch(_ => null);
+      }, 250);
+    }
   }
 
   private resetConnectionTimeout(): void {
@@ -76,8 +91,9 @@ export default class ProxyHost {
 
   public getTarget(): ProxyTarget {
     return {
-      host: this.proxyHost,
-      port: this.proxyPort
+      host: this.containerRunning ? this.proxyHost : 'localhost',
+      port: this.containerRunning ? this.proxyPort : 8080,
+      path: this.containerRunning ? undefined : `/${this.containerName}`
     };
   }
 
