@@ -33,7 +33,7 @@ export default class ConfigManager {
     const fileContent = fs.readFileSync(this.configFile, 'utf-8');
     const config = YAML.parse(fileContent);
 
-    if (!config.proxyHosts) {
+    if (!config || !config.proxyHosts) {
       console.error('⛔️ config.yml is invalid, \'proxyHosts\' property is missing');
     } else {
       this.loadProxyHosts(config.proxyHosts);
