@@ -1,5 +1,6 @@
 import { createServer } from 'http';
 import { createProxyServer } from 'http-proxy';
+import express from 'express';
 import ConfigManager from './ConfigManager';
 import ProxyHost from './ProxyHost';
 
@@ -8,44 +9,6 @@ const proxyHosts: Map<string, ProxyHost> = new Map();
 const configManager = new ConfigManager(proxyHosts);
 const proxy = createProxyServer({
   xfwd: true
-});
-
-const server = createServer((req, res) => {
-  if (!req.headers.host) {
-    res.writeHead(400, { 'Content-Type': 'text/plain' });
-    res.write('Error: Request header host wasn\t specified');
-    res.end();
-    return;
-  }
-  const proxyHost = proxyHosts.get(req.headers.host);
-  if (!proxyHost) {
-    res.writeHead(400, { 'Content-Type': 'text/plain' });
-    res.write(`Error: Proxy configuration is missing for ${req.headers.host}`);
-    res.end();
-    return;
-  }
-
-  proxyHost.newConnection();
-  proxy.web(req, res, {
-    target: proxyHost.getTarget()
-  });
-});
-
-server.on('upgrade', (req, socket, head) => {
-  if (!req.headers.host) {
-    console.error('Socket Upgrade Error: Request header host wasn\'t specified');
-    return;
-  }
-  const proxyHost = proxyHosts.get(req.headers.host);
-  if (!proxyHost) {
-    console.error(`Socket Upgrade Error: Proxy configuration is missing for ${req.headers.host}`);
-    return;
-  }
-
-  proxyHost.newSocketConnection(socket);
-  proxy.ws(req, socket, head, {
-    target: proxyHost.getTarget()
-  });
 });
 
 proxy.on('error', (err, req, res) => {
@@ -63,4 +26,56 @@ proxy.on('error', (err, req, res) => {
   }
 });
 
-server.listen(80);
+const proxyServer = createServer((req, res) => {
+  if (!req.headers.host) {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    res.write('Error: Request header host wasn\t specified');
+    res.end();
+    return;
+  }
+  const proxyHost = proxyHosts.get(req.headers.host);
+  if (!proxyHost) {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    res.write(`Error: Proxy configuration is missing for ${req.headers.host}`);
+    res.end();
+    return;
+  }
+
+  proxyHost.newConnection();
+  proxy.web(req, res, {
+    target: proxyHost.getTarget(),
+    headers: { 'X-Container-Nursery-Placeholder': 'true' }
+  });
+});
+
+proxyServer.on('upgrade', (req, socket, head) => {
+  if (!req.headers.host) {
+    console.error('Socket Upgrade Error: Request header host wasn\'t specified');
+    return;
+  }
+  const proxyHost = proxyHosts.get(req.headers.host);
+  if (!proxyHost) {
+    console.error(`Socket Upgrade Error: Proxy configuration is missing for ${req.headers.host}`);
+    return;
+  }
+
+  proxyHost.newSocketConnection(socket);
+  proxy.ws(req, socket, head, {
+    target: proxyHost.getTarget()
+  });
+});
+
+proxyServer.listen(80);
+
+const placeholderServer = express();
+placeholderServer.set('views', 'views');
+placeholderServer.set('view engine', 'ejs');
+placeholderServer.use((_, res, next) => {
+  res.setHeader('X-Powered-By', 'ContainerNursery');
+  next();
+});
+placeholderServer.use(express.static('public'));
+placeholderServer.get('/:containerName', (req, res) => {
+  res.render('placeholder', req.params);
+});
+placeholderServer.listen(8080);
