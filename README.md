@@ -17,6 +17,13 @@ The application listens on port `80` for traffic.
 https://user-images.githubusercontent.com/2771251/132314400-817971fd-b364-4c78-9fed-650138960530.mp4
 
 
+## Installation
+I ***heavily*** recommend running this application in a Docker container. Pull the latest image using:
+
+```docker pull ghcr.io/itsecholot/containernursery:latest```
+
+More information about the available tags and versions can be found on the [GitHub packages page](https://github.com/ItsEcholot/ContainerNursery/pkgs/container/containernursery).
+
 ## Configuration
 To configure the proxy, edit the `config.yml` file in the `config` directory. The configuration file is automatically reloaded by the application when changes are made.
 If no `config.yml` file is found an empty one is automatically created on application start.
