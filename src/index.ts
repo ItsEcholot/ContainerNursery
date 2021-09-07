@@ -78,4 +78,4 @@ placeholderServer.use(express.static('public'));
 placeholderServer.get('/:containerName', (req, res) => {
   res.render('placeholder', req.params);
 });
-placeholderServer.listen(8080);
+placeholderServer.listen(8080, '127.0.0.1');
