@@ -63,8 +63,7 @@ export default class ProxyHost {
             this.containerRunningChecking = false;
             this.containerRunning = true;
           }
-        // eslint-disable-next-line no-unused-vars
-        }).catch(_ => null);
+        }).catch(() => null);
       }, 250);
     }
   }

@@ -1,0 +1,6 @@
+proxyHosts:
+  - domain: handbrake.yourdomain.io
+    containerName: handbrake
+    proxyHost: localhost
+    proxyPort: 5800
+    timeoutSeconds: 15
