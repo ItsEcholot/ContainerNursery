@@ -16,7 +16,7 @@ https://user-images.githubusercontent.com/2771251/132314400-817971fd-b364-4c78-9
 
 
 ## Configuration
-To configure the proxy, edit the `config.yml` file in the root directory. The configuration file is automatically reloaded by the application when changes are made.
+To configure the proxy, edit the `config.yml` file in the `config` directory. The configuration file is automatically reloaded by the application when changes are made.
 If no `config.yml` file is found an empty one is automatically created on application start.
 
 The virtual hosts the proxy should handle can be configured by adding an object to the `proxyHosts` key.

@@ -3,7 +3,7 @@ import YAML from 'yaml';
 import ProxyHost from './ProxyHost';
 
 export default class ConfigManager {
-  private configFile = 'config.yml';
+  private configFile = 'config/config.yml';
   private proxyHosts: Map<string, ProxyHost>;
 
   constructor(proxyHosts: Map<string, ProxyHost>) {
@@ -15,7 +15,7 @@ export default class ConfigManager {
 
   private createIfNotExist(): void {
     if (!fs.existsSync(this.configFile)) {
-      console.error('config.yml is missing, creating empty file...');
+      console.error('⚠️ config.yml is missing, creating empty file...');
       fs.closeSync(fs.openSync(this.configFile, 'w'));
     }
   }

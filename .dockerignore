@@ -1,4 +1,4 @@
 node_modules/
 .vscode/
 src/
-config.yml/
+config/config.yml
