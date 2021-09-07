@@ -11,6 +11,10 @@ The application listens on port `80` for traffic.
 
 ## Demo
 
+
+https://user-images.githubusercontent.com/2771251/132314400-817971fd-b364-4c78-9fed-650138960530.mp4
+
+
 ## Configuration
 To configure the proxy, edit the `config.yml` file in the root directory. The configuration file is automatically reloaded by the application when changes are made.
 If no `config.yml` file is found an empty one is automatically created on application start.
