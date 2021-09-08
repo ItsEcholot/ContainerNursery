@@ -6,12 +6,12 @@
   <img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2021">
 </p>
 
-Written in Node.js, this application acts as a reverse proxy and stops Docker containers which haven't been accessed recently.  
+Written in Node.js, this application acts as a HTTP reverse proxy and stops Docker containers which haven't been accessed recently.  
 Currently active Websocket connections are also taken into account before stopping the container.
 
 To improve the user experience a loading page is presented, which automatically reloads when the containers webserver is ready.
 
-The application listens on port `80` for traffic.
+The application listens on port `80` for HTTP traffic.
 
 **This application is a rough draft at its current stage, it may contain all sorts of nasty bugs and the code quality is 'meh' at best. PRs / Bug reports are welcomed.**
 
@@ -22,7 +22,9 @@ https://user-images.githubusercontent.com/2771251/132314400-817971fd-b364-4c78-9
 
 
 ## Installation
-I ***heavily*** recommend running this application in a Docker container. Pull the latest image using:
+I ***heavily*** recommend using another reverse proxy in front of ContainerNursery (for HTTPS, caching, etc.) pointing to port `80`.
+
+I also recommend running this application in a Docker container. Pull the latest image using:
 
 ```docker pull ghcr.io/itsecholot/containernursery:latest```
 
@@ -58,4 +60,10 @@ proxyHosts:
     proxyPort: 3000
     timeoutSeconds: 1800
 ```
+
+Now point your existing reverse proxy for the hosts you configured in the previous step to the ContainerNursery IP/Domain Name on port 80.
+
+**Important:** If you use the (otherwise) excellent [NginxProxyManager](https://github.com/jc21/nginx-proxy-manager) ***disable*** the caching for proxy hosts that are routed through ContainerNursery. Because the built-in caching config sadly also caches 404s this will lead to NginxProxyManager caching error messages while your app container is starting up and then refusing to serve the real `.js/.css` file once the startup is complete.
+
+### Example Configuration for [NginxProxyManager](https://github.com/jc21/nginx-proxy-manager)
 

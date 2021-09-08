@@ -41,6 +41,7 @@ export default class ConfigManager {
   }
 
   private loadProxyHosts(proxyHosts: Record<string, unknown>[]): void {
+    console.log('Clearing all hosts...');
     this.clearOldProxyHosts();
     proxyHosts.forEach((proxyHostConfig: Record<string, unknown>) => {
       if (!ConfigManager.validateProxyHost(proxyHostConfig)) {

@@ -26,6 +26,8 @@ export default class ProxyHost {
     proxyPort: number,
     timeoutSeconds: number
   ) {
+    console.log(`Added proxy host for domain ${domain} (container: ${containerName}, proxy: ${proxyHost}:${proxyPort}, timeout after ${timeoutSeconds}s)`);
+
     this.domain = domain;
     this.containerName = containerName;
     this.proxyHost = proxyHost;
