@@ -6,14 +6,13 @@
   <img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2021">
 </p>
 
-Written in Node.js, this application acts as a HTTP reverse proxy and stops Docker containers which haven't been accessed recently.  
-Currently active Websocket connections are also taken into account before stopping the container.
+Written in Node.js, this application acts as a HTTP reverse proxy and stops Docker containers which haven't been accessed recently and starts them again when a new request comes in. ContainerNursery also makes sure there are no more active WebSocket connections before stopping the container.
 
 To improve the user experience a loading page is presented, which automatically reloads when the containers webserver is ready.
 
 The application listens on port `80` for HTTP traffic.
 
-**This application is a rough draft at its current stage, it may contain all sorts of nasty bugs and the code quality is 'meh' at best. PRs / Bug reports are welcomed.**
+**This application is in alpha at this current stage, it may contain all sorts of nasty bugs and the code quality is 'meh' at best. PRs / Bug reports are welcomed.**
 
 ## Demo
 
