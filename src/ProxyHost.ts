@@ -16,6 +16,8 @@ export default class ProxyHost {
   private connectionTimeoutId: NodeJS.Timeout | null = null;
   private containerRunning: boolean | undefined = undefined;
   private containerRunningChecking = false;
+  private startingHost = false;
+  private stoppingHost = false;
 
   constructor(
     domain: string,
@@ -29,26 +31,33 @@ export default class ProxyHost {
     this.proxyHost = proxyHost;
     this.proxyPort = proxyPort;
     this.timeoutSeconds = timeoutSeconds;
-    this.resetConnectionTimeout();
     dockerManager.isContainerRunning(this.containerName).then(res => {
+      if (res) this.resetConnectionTimeout();
       this.containerRunning = res;
     });
   }
 
   private async stopHost(): Promise<void> {
+    if (this.stoppingHost) return;
+    this.stoppingHost = true;
+
     this.containerRunning = false;
-    clearTimeout(this.connectionTimeoutId as NodeJS.Timeout);
-    this.connectionTimeoutId = null;
+    this.stopConnectionTimeout();
 
     if (await dockerManager.isContainerRunning(this.containerName)) {
       console.log(`🛏  Putting ${this.containerName} to sleep`);
       await dockerManager.stopContainer(this.containerName);
     }
+
+    this.stoppingHost = false;
   }
 
   private async startHost(): Promise<void> {
+    if (this.startingHost) return;
+    this.startingHost = true;
+
     if (!this.containerRunningChecking
-        && !(await dockerManager.isContainerRunning(this.containerName))) {
+      && !(await dockerManager.isContainerRunning(this.containerName))) {
       console.log(`⏰ Waking ${this.containerName} up`);
       await dockerManager.startContainer(this.containerName);
       this.containerRunningChecking = true;
@@ -66,17 +75,19 @@ export default class ProxyHost {
         }).catch(() => null);
       }, 250);
     }
+
+    this.startingHost = false;
   }
 
-  private resetConnectionTimeout(): void {
-    if (this.connectionTimeoutId) {
-      clearTimeout(this.connectionTimeoutId);
-      this.connectionTimeoutId = null;
-    }
-
+  private startConnectionTimeout(): void {
     this.connectionTimeoutId = setTimeout(
       () => this.onConnectionTimeout(), this.timeoutSeconds * 1000
     );
+  }
+
+  private resetConnectionTimeout(): void {
+    this.stopConnectionTimeout();
+    this.startConnectionTimeout();
   }
 
   private onConnectionTimeout(): void {
