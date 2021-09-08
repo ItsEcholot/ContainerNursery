@@ -67,3 +67,4 @@ Now point your existing reverse proxy for the hosts you configured in the previo
 
 ### Example Configuration for [NginxProxyManager](https://github.com/jc21/nginx-proxy-manager)
 
+![NginxProxyManager Config](https://user-images.githubusercontent.com/2771251/132512090-621926eb-70b5-4801-a477-70cc300ab2a1.jpeg)
