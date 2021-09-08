@@ -1,6 +1,10 @@
 # Container Nursery
-![GitHub package.json version](https://img.shields.io/github/package-json/v/ItsEcholot/ContainerNursery)
-![Maintenance](https://img.shields.io/maintenance/yes/2021)
+<p align="center"><img src="https://user-images.githubusercontent.com/2771251/132473388-9f0ff8d9-7bbb-47e5-b45f-9634d86a0dff.png" height="250"></p>
+
+<p align="center">
+  <img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/ItsEcholot/ContainerNursery">
+  <img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2021">
+</p>
 
 Written in Node.js, this application acts as a reverse proxy and stops Docker containers which haven't been accessed recently.  
 Currently active Websocket connections are also taken into account before stopping the container.
