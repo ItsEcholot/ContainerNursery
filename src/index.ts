@@ -44,7 +44,7 @@ const proxyServer = createServer((req, res) => {
   proxyHost.newConnection();
   proxy.web(req, res, {
     target: proxyHost.getTarget(),
-    headers: { 'X-Container-Nursery-Placeholder': 'true' }
+    headers: proxyHost.getHeaders()
   });
 });
 
@@ -61,7 +61,8 @@ proxyServer.on('upgrade', (req, socket, head) => {
 
   proxyHost.newSocketConnection(socket);
   proxy.ws(req, socket, head, {
-    target: proxyHost.getTarget()
+    target: proxyHost.getTarget(),
+    headers: proxyHost.getHeaders()
   });
 });
 
@@ -71,11 +72,11 @@ const placeholderServer = express();
 placeholderServer.set('views', 'views');
 placeholderServer.set('view engine', 'ejs');
 placeholderServer.use((_, res, next) => {
-  res.setHeader('X-Powered-By', 'ContainerNursery');
+  res.setHeader('x-powered-by', 'ContainerNursery');
   next();
 });
 placeholderServer.use(express.static('public'));
-placeholderServer.get('/:containerName', (req, res) => {
-  res.render('placeholder', req.params);
+placeholderServer.get('/', (req, res) => {
+  res.render('placeholder', { containerName: req.headers['x-container-nursery-container-name'] });
 });
 placeholderServer.listen(8080, '127.0.0.1');

@@ -99,11 +99,16 @@ export default class ProxyHost {
     this.stopHost();
   }
 
+  public getHeaders(): { [header: string]: string; } {
+    return {
+      'x-container-nursery-container-name': this.containerName
+    };
+  }
+
   public getTarget(): ProxyTarget {
     return {
       host: this.containerRunning ? this.proxyHost : 'localhost',
-      port: this.containerRunning ? this.proxyPort : 8080,
-      path: this.containerRunning ? undefined : `/${this.containerName}`
+      port: this.containerRunning ? this.proxyPort : 8080
     };
   }
 
