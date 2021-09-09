@@ -1,6 +1,7 @@
 import { ProxyTarget } from 'http-proxy';
 import internal from 'stream';
 import fetch from 'node-fetch';
+import logger from './Logger';
 import DockerManager from './DockerManager';
 
 const dockerManager = new DockerManager();
@@ -26,7 +27,15 @@ export default class ProxyHost {
     proxyPort: number,
     timeoutSeconds: number
   ) {
-    console.log(`Added proxy host for domain ${domain} (container: ${containerName}, proxy: ${proxyHost}:${proxyPort}, timeout after ${timeoutSeconds}s)`);
+    logger.info({
+      host: domain,
+      container: containerName,
+      proxy: {
+        host: proxyHost,
+        port: proxyPort
+      },
+      timeoutSeconds: timeoutSeconds
+    }, 'Added proxy host');
 
     this.domain = domain;
     this.containerName = containerName;
@@ -47,7 +56,7 @@ export default class ProxyHost {
     this.stopConnectionTimeout();
 
     if (await dockerManager.isContainerRunning(this.containerName)) {
-      console.log(`🛏  Putting ${this.containerName} to sleep`);
+      logger.info({ container: this.containerName }, 'Stopping container');
       await dockerManager.stopContainer(this.containerName);
     }
 
@@ -60,7 +69,7 @@ export default class ProxyHost {
 
     if (!this.containerRunningChecking
       && !(await dockerManager.isContainerRunning(this.containerName))) {
-      console.log(`⏰ Waking ${this.containerName} up`);
+      logger.info({ container: this.containerName }, 'Starting container');
       await dockerManager.startContainer(this.containerName);
       this.containerRunningChecking = true;
       const checkInterval = setInterval(() => {

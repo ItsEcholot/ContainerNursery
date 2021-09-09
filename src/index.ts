@@ -1,6 +1,7 @@
 import { createServer } from 'http';
 import { createProxyServer } from 'http-proxy';
 import express from 'express';
+import logger from './Logger';
 import ConfigManager from './ConfigManager';
 import ProxyHost from './ProxyHost';
 
@@ -10,6 +11,10 @@ const configManager = new ConfigManager(proxyHosts);
 const proxy = createProxyServer({
   xfwd: true
 });
+
+const proxyListeningPort = 80;
+const placeholderServerListeningPort = 8080;
+const placeholderServerListeningHost = '127.0.0.1';
 
 proxy.on('error', (err, req, res) => {
   if (!req.headers.host) {
@@ -24,6 +29,7 @@ proxy.on('error', (err, req, res) => {
     res.write(`Error: Host is not reachable ${JSON.stringify(proxyHost?.getTarget())}`);
     res.end();
   }
+  logger.warn({ host: req.headers.host, target: proxyHost?.getTarget() }, 'Host not reachable');
 });
 
 const proxyServer = createServer((req, res) => {
@@ -38,6 +44,7 @@ const proxyServer = createServer((req, res) => {
     res.writeHead(400, { 'Content-Type': 'text/plain' });
     res.write(`Error: Proxy configuration is missing for ${req.headers.host}`);
     res.end();
+    logger.warn({ host: req.headers.host }, 'Proxy configuration missing');
     return;
   }
 
@@ -50,12 +57,12 @@ const proxyServer = createServer((req, res) => {
 
 proxyServer.on('upgrade', (req, socket, head) => {
   if (!req.headers.host) {
-    console.error('Socket Upgrade Error: Request header host wasn\'t specified');
+    logger.warn('Socket upgrade failed, request header host not specified');
     return;
   }
   const proxyHost = proxyHosts.get(req.headers.host);
   if (!proxyHost) {
-    console.error(`Socket Upgrade Error: Proxy configuration is missing for ${req.headers.host}`);
+    logger.warn({ host: req.headers.host }, 'Socket upgrade failed, proxy configuration missing');
     return;
   }
 
@@ -66,7 +73,8 @@ proxyServer.on('upgrade', (req, socket, head) => {
   });
 });
 
-proxyServer.listen(80);
+proxyServer.listen(proxyListeningPort);
+logger.info({ port: proxyListeningPort }, 'Proxy listening');
 
 const placeholderServer = express();
 placeholderServer.set('views', 'views');
@@ -78,4 +86,5 @@ placeholderServer.use((_, res, next) => {
 placeholderServer.get('/', (req, res) => {
   res.render('placeholder', { containerName: req.headers['x-container-nursery-container-name'] });
 });
-placeholderServer.listen(8080, '127.0.0.1');
+placeholderServer.listen(placeholderServerListeningPort, placeholderServerListeningHost);
+logger.info({ port: placeholderServerListeningPort, host: placeholderServerListeningHost }, 'Proxy placeholder server listening');

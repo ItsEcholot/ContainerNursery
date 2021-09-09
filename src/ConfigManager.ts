@@ -1,5 +1,6 @@
 import fs from 'fs';
 import YAML from 'yaml';
+import logger from './Logger';
 import ProxyHost from './ProxyHost';
 
 export default class ConfigManager {
@@ -15,15 +16,15 @@ export default class ConfigManager {
 
   private createIfNotExist(): void {
     if (!fs.existsSync(this.configFile)) {
-      console.error('⚠️ config.yml is missing, creating empty file...');
       fs.closeSync(fs.openSync(this.configFile, 'w'));
+      logger.error('config.yml is missing, empty config file was created');
     }
   }
 
   private watch(): void {
     fs.watch(this.configFile, (event) => {
       if (event === 'change') {
-        console.log('Config changed, reloading');
+        logger.info('Config changed, reloading hosts');
         this.parseConfig();
       }
     });
@@ -34,18 +35,18 @@ export default class ConfigManager {
     const config = YAML.parse(fileContent);
 
     if (!config || !config.proxyHosts) {
-      console.error('⛔️ config.yml is invalid, \'proxyHosts\' property is missing');
+      logger.error({ invalidProperty: 'proxyHosts' }, 'config is invalid, missing property');
     } else {
       this.loadProxyHosts(config.proxyHosts);
     }
   }
 
   private loadProxyHosts(proxyHosts: Record<string, unknown>[]): void {
-    console.log('Clearing all hosts...');
+    logger.info('(Re)loading hosts, clearing all existing hosts first');
     this.clearOldProxyHosts();
     proxyHosts.forEach((proxyHostConfig: Record<string, unknown>) => {
       if (!ConfigManager.validateProxyHost(proxyHostConfig)) {
-        console.error(`⛔️ config.yml contains invalid proxyHost with the following config: \n${YAML.stringify(proxyHostConfig)}`);
+        logger.error({ proxyHost: proxyHostConfig }, 'config contains invalid proxyHost object');
       } else {
         this.proxyHosts.set(
           proxyHostConfig.domain as string,
