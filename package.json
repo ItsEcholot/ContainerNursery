@@ -1,6 +1,6 @@
 {
   "name": "containernursery",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Puts Docker Containers to sleep and wakes them back up when they're needed",
   "main": "build/index.js",
   "scripts": {
@@ -26,6 +26,7 @@
     "@types/http-proxy": "^1.17.7",
     "@types/node": "^16.7.10",
     "@types/node-fetch": "^2.5.12",
+    "@types/pino": "^6.3.11",
     "@typescript-eslint/eslint-plugin": "^4.30.0",
     "@typescript-eslint/parser": "^4.30.0",
     "eslint": "^7.32.0",
@@ -38,10 +39,13 @@
   },
   "dependencies": {
     "dockerode": "^3.3.0",
+    "dotenv": "^10.0.0",
     "ejs": "^3.1.6",
     "express": "^4.17.1",
     "http-proxy": "^1.18.1",
     "node-fetch": "^2.6.2",
+    "pino": "^7.0.0-rc.4",
+    "pino-pretty": "^7.0.0",
     "yaml": "^1.10.2"
   }
 }

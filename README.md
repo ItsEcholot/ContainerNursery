@@ -67,3 +67,11 @@ Now point your existing reverse proxy for the hosts you configured in the previo
 ### Example Configuration for [NginxProxyManager](https://github.com/jc21/nginx-proxy-manager)
 
 ![NginxProxyManager Config](https://user-images.githubusercontent.com/2771251/132512090-621926eb-70b5-4801-a477-70cc300ab2a1.jpeg)
+
+### Environment Variables
+Additionally to the configuration done in the `congif.yml` file, there are a few settings which can only be configured by using environment variables.
+
+Name | Valid Values | Description
+-----|--------------|------------
+`CN_LOG_JSON` | `true` / `false` | If set to `true` all logging is done in a machine readable format (JSON). Defaults to `false`.
+`CN_LOG_LEVEL` | `debug` / `info` / `warn` / `error` | Sets the minimum log level. Log entries below this importance level won't be printed to the console. Defaults to `info`.
