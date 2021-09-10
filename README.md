@@ -73,5 +73,5 @@ Additionally to the configuration done in the `congif.yml` file, there are a few
 
 Name | Valid Values | Description
 -----|--------------|------------
-`LOG_JSON` | `true` / `false` | If set to `true` all logging is done in a machine readable format (JSON). Defaults to `false`.
-`LOG_LEVEL` | `debug` / `info` / `warn` / `error` | Sets the minimum log level. Log entries below this importance level won't be printed to the console. Defaults to `info`.
+`CN_LOG_JSON` | `true` / `false` | If set to `true` all logging is done in a machine readable format (JSON). Defaults to `false`.
+`CN_LOG_LEVEL` | `debug` / `info` / `warn` / `error` | Sets the minimum log level. Log entries below this importance level won't be printed to the console. Defaults to `info`.

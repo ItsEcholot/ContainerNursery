@@ -12,5 +12,5 @@ const transport = Pino.transport({
 });
 
 export default Pino({
-  level: process.env.LOG_LEVEL || 'info'
-}, process.env.LOG_JSON === 'true' ? undefined : transport);
+  level: process.env.CN_LOG_LEVEL || 'info'
+}, process.env.CN_LOG_JSON === 'true' ? undefined : transport);
