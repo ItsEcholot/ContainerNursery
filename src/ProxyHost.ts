@@ -45,6 +45,7 @@ export default class ProxyHost {
     dockerManager.isContainerRunning(this.containerName).then(res => {
       if (res) this.resetConnectionTimeout();
       this.containerRunning = res;
+      logger.debug({ container: this.containerName, running: res }, 'Initial docker state check done');
     });
   }
 
@@ -60,6 +61,7 @@ export default class ProxyHost {
       await dockerManager.stopContainer(this.containerName);
     }
 
+    logger.debug({ container: this.containerName }, 'Stopping container complete');
     this.stoppingHost = false;
   }
 
@@ -71,6 +73,8 @@ export default class ProxyHost {
       && !(await dockerManager.isContainerRunning(this.containerName))) {
       logger.info({ container: this.containerName }, 'Starting container');
       await dockerManager.startContainer(this.containerName);
+      logger.debug({ container: this.containerName }, 'Starting container complete');
+
       this.containerRunningChecking = true;
       const checkInterval = setInterval(() => {
         this.resetConnectionTimeout();
@@ -78,12 +82,14 @@ export default class ProxyHost {
         fetch(`http://${this.proxyHost}:${this.proxyPort}`, {
           method: 'HEAD'
         }).then(res => {
+          logger.debug({ container: this.containerName, status: res.status, headers: res.headers }, 'Checked if container is ready');
           if (res.status === 200 || (res.status >= 300 && res.status <= 399)) {
             clearInterval(checkInterval);
             this.containerRunningChecking = false;
             this.containerRunning = true;
+            logger.debug({ container: this.containerName }, 'Container is ready');
           }
-        }).catch(() => null);
+        }).catch(err => logger.debug({ error: err }, 'Container readiness check failed'));
       }, 250);
     }
 
@@ -97,12 +103,14 @@ export default class ProxyHost {
   }
 
   private resetConnectionTimeout(): void {
+    logger.debug({ container: this.containerName, timeoutSeconds: this.timeoutSeconds }, 'Resetting connection timeout');
     this.stopConnectionTimeout();
     this.startConnectionTimeout();
   }
 
   private onConnectionTimeout(): void {
     if (this.activeSockets.size > 0) {
+      logger.debug({ container: this.containerName, activeSocketCount: this.activeSockets.size }, 'Reached timeout but there are still active sockets');
       this.resetConnectionTimeout();
       return;
     }

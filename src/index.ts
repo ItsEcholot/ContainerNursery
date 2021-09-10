@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { createServer } from 'http';
 import { createProxyServer } from 'http-proxy';
 import express from 'express';
@@ -17,6 +18,7 @@ const placeholderServerListeningPort = 8080;
 const placeholderServerListeningHost = '127.0.0.1';
 
 proxy.on('error', (err, req, res) => {
+  logger.debug({ host: req.headers.host, error: err }, 'Error in proxying request');
   if (!req.headers.host) {
     res.writeHead(400, { 'Content-Type': 'text/plain' });
     res.write('Error: Request header host wasn\t specified');
@@ -53,6 +55,7 @@ const proxyServer = createServer((req, res) => {
     target: proxyHost.getTarget(),
     headers: proxyHost.getHeaders()
   });
+  logger.debug({ host: req.headers.host, target: proxyHost.getTarget(), headers: proxyHost.getHeaders() }, 'Proxied request');
 });
 
 proxyServer.on('upgrade', (req, socket, head) => {
@@ -71,6 +74,7 @@ proxyServer.on('upgrade', (req, socket, head) => {
     target: proxyHost.getTarget(),
     headers: proxyHost.getHeaders()
   });
+  logger.debug({ host: req.headers.host, target: proxyHost.getTarget(), headers: proxyHost.getHeaders() }, 'Proxied Upgrade request');
 });
 
 proxyServer.listen(proxyListeningPort);
