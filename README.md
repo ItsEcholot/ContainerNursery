@@ -10,7 +10,7 @@ Written in Node.js, this application acts as a HTTP reverse proxy and stops Dock
 
 To improve the user experience a loading page is presented, which automatically reloads when the containers webserver is ready.
 
-The application listens on port `80` for HTTP traffic.
+The application listens on port `80` for HTTP traffic and uses the socket at `/var/run/docker.sock` to connect to the docker daemon.
 
 **This application is in alpha at this current stage, it may contain all sorts of nasty bugs and the code quality is 'meh' at best. PRs / Bug reports are welcomed.**
 
@@ -28,6 +28,16 @@ I also recommend running this application in a Docker container. Pull the latest
 ```docker pull ghcr.io/itsecholot/containernursery:latest```
 
 More information about the available tags and versions can be found on the [GitHub packages page](https://github.com/ItsEcholot/ContainerNursery/pkgs/container/containernursery).
+
+### Example
+
+```bash
+docker run \
+  --name='ContainerNursery' \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v /mnt/ContainerNursery/config:/usr/src/app/config \
+  ghcr.io/itsecholot/containernursery:latest
+```
 
 ## Configuration
 To configure the proxy, edit the `config.yml` file in the `config` directory. The configuration file is automatically reloaded by the application when changes are made.
