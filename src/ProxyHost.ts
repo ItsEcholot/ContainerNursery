@@ -4,6 +4,7 @@ import fetch from 'node-fetch';
 import logger from './Logger';
 import DockerManager from './DockerManager';
 
+const HEALTH_INTERVAL = 30000;
 const dockerManager = new DockerManager();
 
 export default class ProxyHost {
@@ -17,6 +18,7 @@ export default class ProxyHost {
   private connectionTimeoutId: NodeJS.Timeout | null = null;
   private containerRunning: boolean | undefined = undefined;
   private containerRunningChecking = false;
+  private healthIntervalId: NodeJS.Timer | null = null;
   private startingHost = false;
   private stoppingHost = false;
 
@@ -43,10 +45,29 @@ export default class ProxyHost {
     this.proxyPort = proxyPort;
     this.timeoutSeconds = timeoutSeconds;
     dockerManager.isContainerRunning(this.containerName).then(res => {
-      if (res) this.resetConnectionTimeout();
+      if (res) {
+        this.resetConnectionTimeout();
+        this.setHealthCheck();
+      }
       this.containerRunning = res;
       logger.debug({ container: this.containerName, running: res }, 'Initial docker state check done');
     });
+  }
+
+  private async healthCheck(): Promise<void> {
+    if (this.stoppingHost || !this.containerRunning) return;
+    dockerManager.isContainerRunning(this.containerName).then((res) => {
+      if (!res) {
+        logger.info({ container: this.containerName }, 'Health Check Failed');
+        this.stopHost();
+      }
+    });
+  }
+
+  private setHealthCheck() {
+    this.healthIntervalId = setInterval(async () => {
+      await this.healthCheck();
+    }, HEALTH_INTERVAL);
   }
 
   private async stopHost(): Promise<void> {
@@ -62,6 +83,7 @@ export default class ProxyHost {
     }
 
     logger.debug({ container: this.containerName }, 'Stopping container complete');
+    if (this.healthIntervalId) clearInterval(this.healthIntervalId);
     this.stoppingHost = false;
   }
 
@@ -87,6 +109,7 @@ export default class ProxyHost {
             clearInterval(checkInterval);
             this.containerRunningChecking = false;
             this.containerRunning = true;
+            this.setHealthCheck();
             logger.debug({ container: this.containerName }, 'Container is ready');
           }
         }).catch(err => logger.debug({ error: err }, 'Container readiness check failed'));

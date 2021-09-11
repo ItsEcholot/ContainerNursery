@@ -108,3 +108,6 @@ build/
 
 # Config file
 config/config.yml
+
+# dev env
+.devcontainer
