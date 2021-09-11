@@ -45,4 +45,20 @@ export default class DockerManager {
     });
     return eventEmitter;
   }
+
+  public async getContainerStatsEventEmitter(name: string): Promise<EventEmitter> {
+    const eventEmitter = new EventEmitter();
+    const statsStream = await this.findContainerByName(name)
+      .stats({ stream: true }) as unknown as NodeJS.ReadableStream;
+
+    statsStream.on('data', chunk => {
+      eventEmitter.emit('update', JSON.parse(chunk.toString('utf-8')));
+    });
+
+    eventEmitter.on('stop-stream', () => {
+      statsStream.removeAllListeners();
+    });
+
+    return eventEmitter;
+  }
 }

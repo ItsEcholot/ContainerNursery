@@ -49,6 +49,15 @@ export default class ProxyHost {
       logger.debug({ container: this.containerName, running: res }, 'Initial docker state check done');
     });
 
+    dockerManager.getContainerStatsEventEmitter(this.containerName).then(eventEmitter => {
+      this.containerEventEmitter.on('error', err => {
+        logger.error({ container: this.containerName, error: err }, 'Error occured while connecting to docker event stream');
+      });
+      eventEmitter.on('update', data => {
+
+      });
+    });
+
     this.containerEventEmitter = dockerManager.getContainerEventEmitter(this.containerName);
     this.containerEventEmitter.on('error', err => {
       logger.error(err, 'Error occured while connecting to docker event stream');
