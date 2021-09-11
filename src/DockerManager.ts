@@ -1,3 +1,4 @@
+import EventEmitter from 'events';
 import Docker from 'dockerode';
 
 export default class DockerManager {
@@ -21,5 +22,27 @@ export default class DockerManager {
 
   public async stopContainer(name: string): Promise<void> {
     return this.findContainerByName(name).stop();
+  }
+
+  public getContainerEventEmitter(name: string): EventEmitter {
+    const eventEmitter = new EventEmitter();
+    this.docker.getEvents({
+      filters: {
+        container: [name]
+      }
+    }, (err, res) => {
+      if (err) {
+        eventEmitter.emit('error', err);
+      }
+
+      res?.on('data', chunk => {
+        eventEmitter.emit('update', JSON.parse(chunk.toString('utf-8')));
+      });
+
+      eventEmitter.on('stop-stream', () => {
+        res?.removeAllListeners();
+      });
+    });
+    return eventEmitter;
   }
 }
