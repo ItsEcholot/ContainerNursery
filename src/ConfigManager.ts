@@ -1,4 +1,5 @@
 import fs from 'fs';
+import Chokidar from 'chokidar';
 import YAML from 'yaml';
 import logger from './Logger';
 import ProxyHost from './ProxyHost';
@@ -22,11 +23,9 @@ export default class ConfigManager {
   }
 
   private watch(): void {
-    fs.watch(this.configFile, (event) => {
-      if (event === 'change') {
-        logger.info('Config changed, reloading hosts');
-        this.parseConfig();
-      }
+    Chokidar.watch(this.configFile).on('change', () => {
+      logger.info('Config changed, reloading hosts');
+      this.parseConfig();
     });
   }
 
@@ -65,6 +64,7 @@ export default class ConfigManager {
   private clearOldProxyHosts(): void {
     this.proxyHosts.forEach(proxyHost => {
       proxyHost.stopConnectionTimeout();
+      proxyHost.stopContainerEventEmitter();
     });
     this.proxyHosts.clear();
   }
