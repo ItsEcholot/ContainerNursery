@@ -49,6 +49,7 @@ export default class ProxyHost {
       logger.debug({ container: this.containerName, running: res }, 'Initial docker state check done');
     });
 
+
     dockerManager.getContainerEventEmitter(this.containerName).then(eventEmitter => {
       this.containerEventEmitter = eventEmitter;
       eventEmitter.on('update', data => {
@@ -58,6 +59,12 @@ export default class ProxyHost {
         } else if (data.status === 'start') {
           this.startHost();
         }
+      });
+    });
+
+    dockerManager.getContainerStatsEventEmitter(this.containerName).then(eventEmitter => {
+      eventEmitter.on('update', data => {
+
       });
     });
   }
