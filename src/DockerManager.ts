@@ -24,25 +24,22 @@ export default class DockerManager {
     return this.findContainerByName(name).stop();
   }
 
-  public getContainerEventEmitter(name: string): EventEmitter {
+  public async getContainerEventEmitter(name: string): Promise<EventEmitter> {
     const eventEmitter = new EventEmitter();
-    this.docker.getEvents({
+    const readableStream = await this.docker.getEvents({
       filters: {
         container: [name]
       }
-    }, (err, res) => {
-      if (err) {
-        eventEmitter.emit('error', err);
-      }
-
-      res?.on('data', chunk => {
-        eventEmitter.emit('update', JSON.parse(chunk.toString('utf-8')));
-      });
-
-      eventEmitter.on('stop-stream', () => {
-        res?.removeAllListeners();
-      });
     });
+
+    readableStream.on('data', chunk => {
+      eventEmitter.emit('update', JSON.parse(chunk.toString('utf-8')));
+    });
+
+    eventEmitter.on('stop-stream', () => {
+      readableStream.removeAllListeners();
+    });
+
     return eventEmitter;
   }
 }

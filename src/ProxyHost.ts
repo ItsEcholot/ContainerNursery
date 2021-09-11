@@ -14,7 +14,7 @@ export default class ProxyHost {
   private timeoutSeconds: number;
 
   private activeSockets: Set<internal.Duplex> = new Set();
-  private containerEventEmitter: EventEmitter;
+  private containerEventEmitter: EventEmitter | null = null;
   private connectionTimeoutId: NodeJS.Timeout | null = null;
   private containerRunning: boolean | undefined = undefined;
   private containerReadyChecking = false;
@@ -49,19 +49,16 @@ export default class ProxyHost {
       logger.debug({ container: this.containerName, running: res }, 'Initial docker state check done');
     });
 
-    this.containerEventEmitter = dockerManager.getContainerEventEmitter(this.containerName);
-    this.containerEventEmitter.on('error', err => {
-      logger.error(err, 'Error occured while connecting to docker event stream');
-    });
-    this.containerEventEmitter.on('update', data => {
-      logger.debug({ container: this.containerName, data }, 'Received container event');
-      if (data.status === 'stop') {
-        logger.info({ container: this.containerName }, 'Container was stopped outside of ContainerNursery');
-        this.stopHost();
-      } else if (data.status === 'start') {
-        logger.info({ container: this.containerName }, 'Container was started outside of ContainerNursery');
-        this.startHost();
-      }
+    dockerManager.getContainerEventEmitter(this.containerName).then(eventEmitter => {
+      this.containerEventEmitter = eventEmitter;
+      eventEmitter.on('update', data => {
+        logger.debug({ container: this.containerName, data }, 'Received container event');
+        if (data.status === 'stop') {
+          this.stopHost();
+        } else if (data.status === 'start') {
+          this.startHost();
+        }
+      });
     });
   }
 
@@ -181,6 +178,7 @@ export default class ProxyHost {
   }
 
   public stopContainerEventEmitter(): void {
+    if (!this.containerEventEmitter) return;
     this.containerEventEmitter.emit('stop-stream');
     this.containerEventEmitter.removeAllListeners();
   }
