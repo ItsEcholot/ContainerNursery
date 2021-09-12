@@ -1,5 +1,5 @@
 import { ProxyTarget } from 'http-proxy';
-import internal from 'stream';
+import internal, { EventEmitter } from 'stream';
 import fetch from 'node-fetch';
 import logger from './Logger';
 import DockerManager from './DockerManager';
@@ -14,9 +14,10 @@ export default class ProxyHost {
   private timeoutSeconds: number;
 
   private activeSockets: Set<internal.Duplex> = new Set();
+  private containerEventEmitter: EventEmitter | null = null;
   private connectionTimeoutId: NodeJS.Timeout | null = null;
   private containerRunning: boolean | undefined = undefined;
-  private containerRunningChecking = false;
+  private containerReadyChecking = false;
   private startingHost = false;
   private stoppingHost = false;
 
@@ -47,6 +48,25 @@ export default class ProxyHost {
       this.containerRunning = res;
       logger.debug({ container: this.containerName, running: res }, 'Initial docker state check done');
     });
+
+
+    dockerManager.getContainerEventEmitter(this.containerName).then(eventEmitter => {
+      this.containerEventEmitter = eventEmitter;
+      eventEmitter.on('update', data => {
+        logger.debug({ container: this.containerName, data }, 'Received container event');
+        if (data.status === 'stop') {
+          this.stopHost();
+        } else if (data.status === 'start') {
+          this.startHost();
+        }
+      });
+    });
+
+    dockerManager.getContainerStatsEventEmitter(this.containerName).then(eventEmitter => {
+      eventEmitter.on('update', data => {
+
+      });
+    });
   }
 
   private async stopHost(): Promise<void> {
@@ -59,9 +79,9 @@ export default class ProxyHost {
     if (await dockerManager.isContainerRunning(this.containerName)) {
       logger.info({ container: this.containerName }, 'Stopping container');
       await dockerManager.stopContainer(this.containerName);
+      logger.debug({ container: this.containerName }, 'Stopping container complete');
     }
 
-    logger.debug({ container: this.containerName }, 'Stopping container complete');
     this.stoppingHost = false;
   }
 
@@ -69,31 +89,35 @@ export default class ProxyHost {
     if (this.startingHost) return;
     this.startingHost = true;
 
-    if (!this.containerRunningChecking
-      && !(await dockerManager.isContainerRunning(this.containerName))) {
+    if (!(await dockerManager.isContainerRunning(this.containerName))) {
       logger.info({ container: this.containerName }, 'Starting container');
       await dockerManager.startContainer(this.containerName);
       logger.debug({ container: this.containerName }, 'Starting container complete');
-
-      this.containerRunningChecking = true;
-      const checkInterval = setInterval(() => {
-        this.resetConnectionTimeout();
-
-        fetch(`http://${this.proxyHost}:${this.proxyPort}`, {
-          method: 'HEAD'
-        }).then(res => {
-          logger.debug({ container: this.containerName, status: res.status, headers: res.headers }, 'Checked if container is ready');
-          if (res.status === 200 || (res.status >= 300 && res.status <= 399)) {
-            clearInterval(checkInterval);
-            this.containerRunningChecking = false;
-            this.containerRunning = true;
-            logger.debug({ container: this.containerName }, 'Container is ready');
-          }
-        }).catch(err => logger.debug({ error: err }, 'Container readiness check failed'));
-      }, 250);
     }
 
+    this.checkContainerReady();
     this.startingHost = false;
+  }
+
+  private checkContainerReady() {
+    if (this.containerReadyChecking) return;
+
+    this.containerReadyChecking = true;
+    const checkInterval = setInterval(() => {
+      this.resetConnectionTimeout();
+
+      fetch(`http://${this.proxyHost}:${this.proxyPort}`, {
+        method: 'HEAD'
+      }).then(res => {
+        logger.debug({ container: this.containerName, status: res.status, headers: res.headers }, 'Checked if container is ready');
+        if (res.status === 200 || (res.status >= 300 && res.status <= 399)) {
+          clearInterval(checkInterval);
+          this.containerReadyChecking = false;
+          this.containerRunning = true;
+          logger.debug({ container: this.containerName }, 'Container is ready');
+        }
+      }).catch(err => logger.debug({ error: err }, 'Container readiness check failed'));
+    }, 250);
   }
 
   private startConnectionTimeout(): void {
@@ -158,5 +182,11 @@ export default class ProxyHost {
       clearTimeout(this.connectionTimeoutId);
       this.connectionTimeoutId = null;
     }
+  }
+
+  public stopContainerEventEmitter(): void {
+    if (!this.containerEventEmitter) return;
+    this.containerEventEmitter.emit('stop-stream');
+    this.containerEventEmitter.removeAllListeners();
   }
 }
