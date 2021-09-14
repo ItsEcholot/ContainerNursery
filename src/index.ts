@@ -13,7 +13,7 @@ const proxy = createProxyServer({
   xfwd: true
 });
 
-const proxyListeningPort = 80;
+const proxyListeningPort = configManager.getProxyListeningPort();
 const placeholderServerListeningPort = 8080;
 const placeholderServerListeningHost = '127.0.0.1';
 

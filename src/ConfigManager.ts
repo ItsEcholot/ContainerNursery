@@ -7,12 +7,34 @@ import ProxyHost from './ProxyHost';
 export default class ConfigManager {
   private configFile = 'config/config.yml';
   private proxyHosts: Map<string, ProxyHost>;
+  private proxyListeningPort: number | null;
 
   constructor(proxyHosts: Map<string, ProxyHost>) {
     this.proxyHosts = proxyHosts;
+    this.proxyListeningPort = null;
     this.createIfNotExist();
     this.parseConfig();
     this.watch();
+  }
+
+  private static parsePort(p: string): number | null {
+    const PORT = parseInt(p, 10);
+    if (Number.isInteger(PORT) && PORT >= 0 && PORT <= 49151) {
+      return PORT;
+    }
+
+    return null;
+  }
+
+  public getProxyListeningPort(): number {
+    if (this.proxyListeningPort) return this.proxyListeningPort;
+
+    if (process.env.PORT) {
+      this.proxyListeningPort = ConfigManager.parsePort(process.env.PORT);
+      if (this.proxyListeningPort) return this.proxyListeningPort;
+    }
+
+    return 80;
   }
 
   private createIfNotExist(): void {
@@ -37,6 +59,9 @@ export default class ConfigManager {
       logger.error({ invalidProperty: 'proxyHosts' }, 'config is invalid, missing property');
     } else {
       this.loadProxyHosts(config.proxyHosts);
+      if (config.proxyListeningPort) {
+        this.proxyListeningPort = ConfigManager.parsePort(config.proxyListeningPort);
+      }
     }
   }
 
