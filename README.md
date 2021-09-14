@@ -57,6 +57,7 @@ Property | Meaning
 
 ### Example Configuration
 ```yaml
+proxyListeningPort: 80 #the port the proxy will listen on
 proxyHosts:
   - domain: handbrake.yourdomain.io
     containerName: handbrake
