@@ -3,6 +3,7 @@ import Chokidar from 'chokidar';
 import YAML from 'yaml';
 import logger from './Logger';
 import ProxyHost from './ProxyHost';
+import { updateProxyServer } from '.';
 
 export default class ConfigManager {
   private configFile = 'config/config.yml';
@@ -60,7 +61,11 @@ export default class ConfigManager {
     } else {
       this.loadProxyHosts(config.proxyHosts);
       if (config.proxyListeningPort) {
+        const prevPort = this.proxyListeningPort;
         this.proxyListeningPort = ConfigManager.parsePort(config.proxyListeningPort);
+        if (prevPort !== null && prevPort !== this.proxyListeningPort) {
+          updateProxyServer();
+        }
       }
     }
   }
