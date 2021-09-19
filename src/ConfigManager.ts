@@ -42,7 +42,8 @@ export default class ConfigManager {
       if (this.proxyListeningPort) return this.proxyListeningPort;
     }
 
-    return 80;
+    this.proxyListeningPort = 80;
+    return this.proxyListeningPort;
   }
 
   private createIfNotExist(): void {
