@@ -37,8 +37,8 @@ export default class ConfigManager {
   public getProxyListeningPort(): number {
     if (this.proxyListeningPort) return this.proxyListeningPort;
 
-    if (process.env.PORT) {
-      this.proxyListeningPort = ConfigManager.parsePort(process.env.PORT);
+    if (process.env.CN_PORT) {
+      this.proxyListeningPort = ConfigManager.parsePort(process.env.CN_PORT);
       if (this.proxyListeningPort) return this.proxyListeningPort;
     }
 
