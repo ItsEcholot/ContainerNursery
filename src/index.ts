@@ -17,7 +17,13 @@ const proxyListeningPort = 80;
 const placeholderServerListeningPort = 8080;
 const placeholderServerListeningHost = '127.0.0.1';
 
+const stripPortHostHeader = (host: string | undefined): string | undefined => {
+  if (!host) return host;
+  return host.replace(/(:\d+)/i, '');
+};
+
 proxy.on('error', (err, req, res) => {
+  req.headers.host = stripPortHostHeader(req.headers.host);
   logger.debug({ host: req.headers.host, error: err }, 'Error in proxying request');
   if (!req.headers.host) {
     res.writeHead(400, { 'Content-Type': 'text/plain' });
@@ -35,6 +41,7 @@ proxy.on('error', (err, req, res) => {
 });
 
 const proxyServer = createServer((req, res) => {
+  req.headers.host = stripPortHostHeader(req.headers.host);
   if (!req.headers.host) {
     res.writeHead(400, { 'Content-Type': 'text/plain' });
     res.write('Error: Request header host wasn\t specified');
@@ -59,6 +66,7 @@ const proxyServer = createServer((req, res) => {
 });
 
 proxyServer.on('upgrade', (req, socket, head) => {
+  req.headers.host = stripPortHostHeader(req.headers.host);
   if (!req.headers.host) {
     logger.warn('Socket upgrade failed, request header host not specified');
     return;
