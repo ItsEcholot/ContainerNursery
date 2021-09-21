@@ -13,7 +13,7 @@ const proxy = createProxyServer({
   xfwd: true
 });
 
-const proxyListeningPort = 80;
+var proxyListeningPort = configManager.getProxyListeningPort();
 const placeholderServerListeningPort = 8080;
 const placeholderServerListeningHost = '127.0.0.1';
 
@@ -87,6 +87,14 @@ proxyServer.on('upgrade', (req, socket, head) => {
 
 proxyServer.listen(proxyListeningPort);
 logger.info({ port: proxyListeningPort }, 'Proxy listening');
+
+configManager.on('port-update', () => {
+  proxyListeningPort = configManager.getProxyListeningPort();
+  proxyServer.close(() => {
+    proxyServer.listen(proxyListeningPort);
+    logger.info({ port: proxyListeningPort }, 'Proxy listening');
+  });
+});
 
 const placeholderServer = express();
 placeholderServer.set('views', 'views');

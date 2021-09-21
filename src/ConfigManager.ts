@@ -3,16 +3,55 @@ import Chokidar from 'chokidar';
 import YAML from 'yaml';
 import logger from './Logger';
 import ProxyHost from './ProxyHost';
+import EventEmitter from 'events';
+
+const placeholderServerListeningPort = 8080;
 
 export default class ConfigManager {
   private configFile = 'config/config.yml';
   private proxyHosts: Map<string, ProxyHost>;
+  private proxyListeningPort: number | null;
+  private eventEmitter: EventEmitter;
 
   constructor(proxyHosts: Map<string, ProxyHost>) {
     this.proxyHosts = proxyHosts;
+    this.proxyListeningPort = null;
+    this.eventEmitter = new EventEmitter();
     this.createIfNotExist();
     this.parseConfig();
     this.watch();
+  }
+
+  private static parsePort(p: string): number | null {
+    const PORT = parseInt(p, 10);
+    if (Number.isInteger(PORT) && PORT >= 0 && PORT <= 49151) {
+      return PORT;
+    }
+
+    return null;
+  }
+
+  // eslint-disable-next-line no-unused-vars
+  public on(event: string, cb: (...args: unknown[]) => void): void {
+    this.eventEmitter.on(event, cb);
+  }
+
+  public getProxyListeningPort(): number {
+    if (this.proxyListeningPort
+      && this.proxyListeningPort !== placeholderServerListeningPort) {
+      return this.proxyListeningPort;
+    }
+
+    if (process.env.CN_PORT) {
+      this.proxyListeningPort = ConfigManager.parsePort(process.env.CN_PORT);
+      if (this.proxyListeningPort
+        && this.proxyListeningPort !== placeholderServerListeningPort) {
+        return this.proxyListeningPort;
+      }
+    }
+
+    this.proxyListeningPort = 80;
+    return this.proxyListeningPort;
   }
 
   private createIfNotExist(): void {
@@ -37,6 +76,13 @@ export default class ConfigManager {
       logger.error({ invalidProperty: 'proxyHosts' }, 'config is invalid, missing property');
     } else {
       this.loadProxyHosts(config.proxyHosts);
+      if (config.proxyListeningPort) {
+        const prevPort = this.proxyListeningPort;
+        this.proxyListeningPort = ConfigManager.parsePort(config.proxyListeningPort);
+        if (prevPort !== null && prevPort !== this.proxyListeningPort) {
+          this.eventEmitter.emit('port-update');
+        }
+      }
     }
   }
 

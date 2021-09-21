@@ -4,3 +4,4 @@ proxyHosts:
     proxyHost: localhost
     proxyPort: 5800
     timeoutSeconds: 15
+proxyListeningPort: 80
