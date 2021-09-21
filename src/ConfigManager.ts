@@ -5,6 +5,8 @@ import logger from './Logger';
 import ProxyHost from './ProxyHost';
 import EventEmitter from 'events';
 
+const placeholderServerListeningPort = 8080;
+
 export default class ConfigManager {
   private configFile = 'config/config.yml';
   private proxyHosts: Map<string, ProxyHost>;
@@ -35,11 +37,17 @@ export default class ConfigManager {
   }
 
   public getProxyListeningPort(): number {
-    if (this.proxyListeningPort) return this.proxyListeningPort;
+    if (this.proxyListeningPort
+      && this.proxyListeningPort !== placeholderServerListeningPort) {
+      return this.proxyListeningPort;
+    }
 
     if (process.env.CN_PORT) {
       this.proxyListeningPort = ConfigManager.parsePort(process.env.CN_PORT);
-      if (this.proxyListeningPort) return this.proxyListeningPort;
+      if (this.proxyListeningPort
+        && this.proxyListeningPort !== placeholderServerListeningPort) {
+        return this.proxyListeningPort;
+      }
     }
 
     this.proxyListeningPort = 80;
