@@ -10,9 +10,9 @@ Written in Node.js, this application acts as a HTTP reverse proxy and stops Dock
 
 To improve the user experience a loading page is presented, which automatically reloads when the containers webserver is ready.
 
-The application listens on port `80` for HTTP traffic and uses the socket at `/var/run/docker.sock` to connect to the docker daemon.
+The application listens on port `80` by default for HTTP traffic and uses the socket at `/var/run/docker.sock` to connect to the docker daemon.
 
-**This application is in alpha at this current stage, it may contain all sorts of nasty bugs and the code quality is 'meh' at best. PRs / Bug reports are welcomed.**
+**This application is currently in beta.**
 
 ## Demo
 
@@ -21,7 +21,7 @@ https://user-images.githubusercontent.com/2771251/132314400-817971fd-b364-4c78-9
 
 
 ## Installation
-I ***heavily*** recommend using another reverse proxy in front of ContainerNursery (for HTTPS, caching, etc.) pointing to port `80`.
+I ***heavily*** recommend using another reverse proxy in front of ContainerNursery (for HTTPS, caching, etc.) pointing to your configured listening port (default `80`).
 
 I also recommend running this application in a Docker container. Pull the latest image using:
 
@@ -42,6 +42,11 @@ docker run \
 ## Configuration
 To configure the proxy, edit the `config.yml` file in the `config` directory. The configuration file is automatically reloaded by the application when changes are made.
 If no `config.yml` file is found an empty one is automatically created on application start.
+
+The following top-level properties can be configured:
+Property | Meaning
+---------|--------|
+`proxyListeningPort` | The port ContainerNursery should listen on for new http connections. Defaults to `80`.
 
 The virtual hosts the proxy should handle can be configured by adding an object to the `proxyHosts` key.
 
@@ -86,3 +91,4 @@ Name | Valid Values | Description
 -----|--------------|------------
 `CN_LOG_JSON` | `true` / `false` | If set to `true` all logging is done in a machine readable format (JSON). Defaults to `false`.
 `CN_LOG_LEVEL` | `debug` / `info` / `warn` / `error` | Sets the minimum log level. Log entries below this importance level won't be printed to the console. Defaults to `info`.
+`CN_PORT` | `integer` | Sets the port ContainerNursery listens on for new http connections. The `proxyListeningPort` option in the `config.yml` file takes precedence if both are set. Defaults to `80` if no value is set.

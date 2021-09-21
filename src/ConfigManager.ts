@@ -5,6 +5,7 @@ import logger from './Logger';
 import ProxyHost from './ProxyHost';
 import EventEmitter from 'events';
 
+const defaultProxyListeningPort = 80;
 const placeholderServerListeningPort = 8080;
 
 export default class ConfigManager {
@@ -28,6 +29,7 @@ export default class ConfigManager {
       return PORT;
     }
 
+    logger.warn({ portString: p }, 'Parsing proxy listening port failed! Is a valid value used (0-49151)?');
     return null;
   }
 
@@ -40,6 +42,8 @@ export default class ConfigManager {
     if (this.proxyListeningPort
       && this.proxyListeningPort !== placeholderServerListeningPort) {
       return this.proxyListeningPort;
+    } if (this.proxyListeningPort === placeholderServerListeningPort) {
+      logger.warn({ placeholderServerListeningPort, desiredProxyListeningPort: this.proxyListeningPort }, "Can't use the same port as the internal placeholder server uses");
     }
 
     if (process.env.CN_PORT) {
@@ -50,7 +54,8 @@ export default class ConfigManager {
       }
     }
 
-    this.proxyListeningPort = 80;
+    logger.warn({ port: defaultProxyListeningPort }, 'Using default proxy listening port');
+    this.proxyListeningPort = defaultProxyListeningPort;
     return this.proxyListeningPort;
   }
 
@@ -73,7 +78,7 @@ export default class ConfigManager {
     const config = YAML.parse(fileContent);
 
     if (!config || !config.proxyHosts) {
-      logger.error({ invalidProperty: 'proxyHosts' }, 'config is invalid, missing property');
+      logger.error({ invalidProperty: 'proxyHosts' }, 'Config is invalid, missing property');
     } else {
       this.loadProxyHosts(config.proxyHosts);
       if (config.proxyListeningPort) {
@@ -91,7 +96,7 @@ export default class ConfigManager {
     this.clearOldProxyHosts();
     proxyHosts.forEach((proxyHostConfig: Record<string, unknown>) => {
       if (!ConfigManager.validateProxyHost(proxyHostConfig)) {
-        logger.error({ proxyHost: proxyHostConfig }, 'config contains invalid proxyHost object');
+        logger.error({ proxyHost: proxyHostConfig }, 'Config contains invalid proxyHost object');
       } else {
         this.proxyHosts.set(
           proxyHostConfig.domain as string,
