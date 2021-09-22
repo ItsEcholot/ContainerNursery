@@ -59,6 +59,11 @@ Property | Meaning
 `proxyHost` | Domain / IP of container (use custom Docker bridge networks for dynDNS using the name of the container)
 `proxyPort` | Port on which the containers webserver listens on
 `timeoutSeconds` | Seconds after which the container should be stopped. The internal timeout gets reset to this configured value every time a new HTTP request is made, or when the timer runs out while a Websocket connection is still active.
+
+The following properties are optional:
+
+Property | Meaning
+---------|--------|
 `stopOnTimeoutIfCpuUsageBelow` | If set, prevents the container from stopping when reaching the configured timeout if the averaged CPU usage (percentage between 0 and 100*core count) of the container is above this value. This is great for containers that should remain running while their doing intensive work even when nobody is doing any http requests, for example handbrake.
 
 ### Example Configuration
