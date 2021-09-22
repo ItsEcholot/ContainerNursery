@@ -12,6 +12,7 @@ export default class ProxyHost {
   private proxyHost: string;
   private proxyPort: number;
   private timeoutSeconds: number;
+  public stopOnTimeoutIfCpuUsageBelow = Infinity;
 
   private activeSockets: Set<internal.Duplex> = new Set();
   private containerEventEmitter: EventEmitter | null = null;
@@ -20,6 +21,11 @@ export default class ProxyHost {
   private containerReadyChecking = false;
   private startingHost = false;
   private stoppingHost = false;
+
+  private cpuAverage = 0;
+  private cpuAverageCounter = 0;
+  private lastContainerCPUUsage = 0;
+  private lastSystemCPUUsage = 0;
 
   constructor(
     domain: string,
@@ -49,7 +55,6 @@ export default class ProxyHost {
       logger.debug({ container: this.containerName, running: res }, 'Initial docker state check done');
     });
 
-
     dockerManager.getContainerEventEmitter(this.containerName).then(eventEmitter => {
       this.containerEventEmitter = eventEmitter;
       eventEmitter.on('update', data => {
@@ -64,7 +69,13 @@ export default class ProxyHost {
 
     dockerManager.getContainerStatsEventEmitter(this.containerName).then(eventEmitter => {
       eventEmitter.on('update', data => {
+        if (!this.containerRunning || !data.cpu_stats.cpu_usage.percpu_usage) return;
 
+        this.calculateCPUAverage(
+          data.cpu_stats.cpu_usage.total_usage,
+          data.cpu_stats.system_cpu_usage,
+          data.cpu_stats.cpu_usage.percpu_usage.length
+        );
       });
     });
   }
@@ -77,7 +88,7 @@ export default class ProxyHost {
     this.stopConnectionTimeout();
 
     if (await dockerManager.isContainerRunning(this.containerName)) {
-      logger.info({ container: this.containerName }, 'Stopping container');
+      logger.info({ container: this.containerName, cpuUsageAverage: this.cpuAverage }, 'Stopping container');
       await dockerManager.stopContainer(this.containerName);
       logger.debug({ container: this.containerName }, 'Stopping container complete');
     }
@@ -130,6 +141,7 @@ export default class ProxyHost {
     logger.debug({ container: this.containerName, timeoutSeconds: this.timeoutSeconds }, 'Resetting connection timeout');
     this.stopConnectionTimeout();
     this.startConnectionTimeout();
+    this.resetCPUAverage();
   }
 
   private onConnectionTimeout(): void {
@@ -138,8 +150,36 @@ export default class ProxyHost {
       this.resetConnectionTimeout();
       return;
     }
+    if (this.cpuAverage > this.stopOnTimeoutIfCpuUsageBelow) {
+      logger.debug({ container: this.containerName, cpuUsageAverage: this.cpuAverage }, 'Reached timeout but the container cpu usage is above the minimum configured');
+      this.resetConnectionTimeout();
+      return;
+    }
 
     this.stopHost();
+  }
+
+  private calculateCPUAverage(cpuUsage: number, systemCPUUsage: number, cpuCount: number): void {
+    let cpuPercentage = 0;
+    const cpuDelta = cpuUsage - this.lastContainerCPUUsage;
+    const systemDelta = systemCPUUsage - this.lastSystemCPUUsage;
+
+    if (cpuDelta > 0 && systemDelta > 0) {
+      cpuPercentage = (cpuDelta / systemDelta) * cpuCount * 100;
+
+      // using exponential weighted moving average
+      const factor = 30; // if 1, then average = current value
+      this.cpuAverageCounter += 1;
+      this.cpuAverage += (cpuPercentage - this.cpuAverage) / Math.min(this.cpuAverageCounter, factor);
+    }
+
+    this.lastContainerCPUUsage = cpuUsage;
+    this.lastSystemCPUUsage = systemCPUUsage;
+  }
+
+  private resetCPUAverage(): void {
+    this.cpuAverage = 0;
+    this.cpuAverageCounter = 0;
   }
 
   public getHeaders(): { [header: string]: string; } {
