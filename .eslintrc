@@ -12,7 +12,8 @@
   ],
   "rules": {
     "no-console": "off",
-    "lines-between-class-members": "off"
+    "lines-between-class-members": "off",
+    "max-len": ["warn", {"code": 120, "ignoreStrings": true}]
   },
   "globals": {
     "NodeJS": true

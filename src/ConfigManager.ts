@@ -98,15 +98,21 @@ export default class ConfigManager {
       if (!ConfigManager.validateProxyHost(proxyHostConfig)) {
         logger.error({ proxyHost: proxyHostConfig }, 'Config contains invalid proxyHost object');
       } else {
+        const proxyHost = new ProxyHost( // TODO
+          proxyHostConfig.domain as string,
+          proxyHostConfig.containerName as string,
+          proxyHostConfig.proxyHost as string,
+          proxyHostConfig.proxyPort as number,
+          proxyHostConfig.timeoutSeconds as number
+        );
+
+        if (proxyHostConfig.stopOnTimeoutIfCpuUsageBelow) {
+          proxyHost.stopOnTimeoutIfCpuUsageBelow = proxyHostConfig.stopOnTimeoutIfCpuUsageBelow as number;
+        }
+
         this.proxyHosts.set(
           proxyHostConfig.domain as string,
-          new ProxyHost( // TODO
-            proxyHostConfig.domain as string,
-            proxyHostConfig.containerName as string,
-            proxyHostConfig.proxyHost as string,
-            proxyHostConfig.proxyPort as number,
-            proxyHostConfig.timeoutSeconds as number
-          )
+          proxyHost
         );
       }
     });
@@ -126,9 +132,7 @@ export default class ConfigManager {
     if (!proxyHostConfig.containerName) return false;
     if (!proxyHostConfig.proxyHost) return false;
     if (!proxyHostConfig.proxyPort) return false;
-    if (!proxyHostConfig.timeoutSeconds) {
-      return false;
-    }
+    if (!proxyHostConfig.timeoutSeconds) return false;
 
     return true;
   }
