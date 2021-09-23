@@ -69,7 +69,7 @@ export default class ConfigManager {
   private watch(): void {
     Chokidar.watch(this.configFile).on('change', () => {
       logger.info('Config changed, reloading hosts');
-      this.parseConfig();
+      setTimeout(() => this.parseConfig(), 500);
     });
   }
 
