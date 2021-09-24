@@ -108,3 +108,7 @@ placeholderServer.get('/', (req, res) => {
 });
 placeholderServer.listen(placeholderServerListeningPort, placeholderServerListeningHost);
 logger.info({ port: placeholderServerListeningPort, host: placeholderServerListeningHost }, 'Proxy placeholder server listening');
+
+process.on('SIGTERM', () => {
+  process.exit(0);
+});
