@@ -24,11 +24,11 @@ export default class DockerManager {
     return this.findContainerByName(name).stop();
   }
 
-  public async getContainerEventEmitter(name: string): Promise<EventEmitter> {
+  public async getContainerEventEmitter(names: string[]): Promise<EventEmitter> {
     const eventEmitter = new EventEmitter();
     const readableStream = await this.docker.getEvents({
       filters: {
-        container: [name]
+        container: names
       }
     });
 
