@@ -49,9 +49,26 @@ export default class ProxyHost {
     this.proxyHost = proxyHost;
     this.proxyPort = proxyPort;
     this.timeoutSeconds = timeoutSeconds;
-    dockerManager.isContainerRunning(this.containerName[0]).then(res => {
+    dockerManager.isContainerRunning(this.containerName[0]).then(async (res) => {
       if (res) this.resetConnectionTimeout();
       this.containerRunning = res;
+
+      const otherContainers = this.containerName.slice(1);
+      const otherContainerChecks: Promise<boolean>[] = [];
+      otherContainers.forEach(otherContainerName => {
+        otherContainerChecks.push(dockerManager.isContainerRunning(otherContainerName));
+      });
+      (await Promise.all(otherContainerChecks)).forEach((otherContainerRunning, i) => {
+        if (this.containerRunning === otherContainerRunning) return;
+        if (otherContainerRunning) {
+          logger.debug({ mainContainer: otherContainers[i], container: otherContainers[i] }, 'Stopping other container because main container isn\'t running');
+          dockerManager.stopContainer(otherContainers[i]);
+        } else {
+          logger.debug({ mainContainer: otherContainers[i], container: otherContainers[i] }, 'Starting other container because main container is running');
+          dockerManager.startContainer(otherContainers[i]);
+        }
+      });
+
       logger.debug({ container: this.containerName, running: res }, 'Initial docker state check done');
     });
 
