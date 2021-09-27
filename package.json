@@ -1,6 +1,6 @@
 {
   "name": "containernursery",
-  "version": "1.4.2",
+  "version": "1.5.0",
   "description": "Puts Docker Containers to sleep and wakes them back up when they're needed",
   "main": "build/index.js",
   "scripts": {
