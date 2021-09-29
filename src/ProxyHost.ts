@@ -8,7 +8,7 @@ const dockerManager = new DockerManager();
 
 export default class ProxyHost {
   private domain: string;
-  private containerName: string;
+  private containerName: string[];
   private proxyHost: string;
   private proxyPort: number;
   private timeoutSeconds: number;
@@ -29,7 +29,7 @@ export default class ProxyHost {
 
   constructor(
     domain: string,
-    containerName: string,
+    containerName: string[],
     proxyHost: string,
     proxyPort: number,
     timeoutSeconds: number
@@ -49,9 +49,26 @@ export default class ProxyHost {
     this.proxyHost = proxyHost;
     this.proxyPort = proxyPort;
     this.timeoutSeconds = timeoutSeconds;
-    dockerManager.isContainerRunning(this.containerName).then(res => {
+    dockerManager.isContainerRunning(this.containerName[0]).then(async (res) => {
       if (res) this.resetConnectionTimeout();
       this.containerRunning = res;
+
+      const otherContainers = this.containerName.slice(1);
+      const otherContainerChecks: Promise<boolean>[] = [];
+      otherContainers.forEach(otherContainerName => {
+        otherContainerChecks.push(dockerManager.isContainerRunning(otherContainerName));
+      });
+      (await Promise.all(otherContainerChecks)).forEach((otherContainerRunning, i) => {
+        if (this.containerRunning === otherContainerRunning) return;
+        if (otherContainerRunning) {
+          logger.debug({ mainContainer: otherContainers[i], container: otherContainers[i] }, 'Stopping other container because main container isn\'t running');
+          dockerManager.stopContainer(otherContainers[i]);
+        } else {
+          logger.debug({ mainContainer: otherContainers[i], container: otherContainers[i] }, 'Starting other container because main container is running');
+          dockerManager.startContainer(otherContainers[i]);
+        }
+      });
+
       logger.debug({ container: this.containerName, running: res }, 'Initial docker state check done');
     });
 
@@ -67,7 +84,7 @@ export default class ProxyHost {
       });
     });
 
-    dockerManager.getContainerStatsEventEmitter(this.containerName).then(eventEmitter => {
+    dockerManager.getContainerStatsEventEmitter(this.containerName[0]).then(eventEmitter => {
       eventEmitter.on('update', data => {
         if (!this.containerRunning || !data.cpu_stats.cpu_usage.percpu_usage) return;
 
@@ -87,11 +104,13 @@ export default class ProxyHost {
     this.containerRunning = false;
     this.stopConnectionTimeout();
 
-    if (await dockerManager.isContainerRunning(this.containerName)) {
-      logger.info({ container: this.containerName, cpuUsageAverage: this.cpuAverage }, 'Stopping container');
-      await dockerManager.stopContainer(this.containerName);
-      logger.debug({ container: this.containerName }, 'Stopping container complete');
-    }
+    await Promise.all(this.containerName.map(async (container) => {
+      if (await dockerManager.isContainerRunning(container)) {
+        logger.info({ container, cpuUsageAverage: container === this.containerName[0] ? this.cpuAverage : undefined }, 'Stopping container');
+        await dockerManager.stopContainer(container);
+        logger.debug({ container }, 'Stopping container complete');
+      }
+    }));
 
     this.stoppingHost = false;
   }
@@ -100,11 +119,13 @@ export default class ProxyHost {
     if (this.startingHost) return;
     this.startingHost = true;
 
-    if (!(await dockerManager.isContainerRunning(this.containerName))) {
-      logger.info({ container: this.containerName }, 'Starting container');
-      await dockerManager.startContainer(this.containerName);
-      logger.debug({ container: this.containerName }, 'Starting container complete');
-    }
+    await Promise.all(this.containerName.map(async (container) => {
+      if (!(await dockerManager.isContainerRunning(container))) {
+        logger.info({ container }, 'Starting container');
+        await dockerManager.startContainer(container);
+        logger.debug({ container }, 'Starting container complete');
+      }
+    }));
 
     this.checkContainerReady();
     this.startingHost = false;
@@ -120,12 +141,24 @@ export default class ProxyHost {
       fetch(`http://${this.proxyHost}:${this.proxyPort}`, {
         method: 'HEAD'
       }).then(res => {
-        logger.debug({ container: this.containerName, status: res.status, headers: res.headers }, 'Checked if container is ready');
+        logger.debug({
+          domain: this.domain,
+          proxyHost: this.proxyHost,
+          proxyPort: this.proxyPort,
+          status: res.status,
+          headers: res.headers
+        }, 'Checked if target is ready');
+
         if (res.status === 200 || (res.status >= 300 && res.status <= 399)) {
           clearInterval(checkInterval);
           this.containerReadyChecking = false;
           this.containerRunning = true;
-          logger.debug({ container: this.containerName }, 'Container is ready');
+
+          logger.debug({
+            domain: this.domain,
+            proxyHost: this.proxyHost,
+            proxyPort: this.proxyPort
+          }, 'Target is ready');
         }
       }).catch(err => logger.debug({ error: err }, 'Container readiness check failed'));
     }, 250);
@@ -138,7 +171,10 @@ export default class ProxyHost {
   }
 
   private resetConnectionTimeout(): void {
-    logger.debug({ container: this.containerName, timeoutSeconds: this.timeoutSeconds }, 'Resetting connection timeout');
+    logger.debug({
+      domain: this.domain,
+      timeoutSeconds: this.timeoutSeconds
+    }, 'Resetting connection timeout');
     this.stopConnectionTimeout();
     this.startConnectionTimeout();
     this.resetCPUAverage();
@@ -146,12 +182,19 @@ export default class ProxyHost {
 
   private onConnectionTimeout(): void {
     if (this.activeSockets.size > 0) {
-      logger.debug({ container: this.containerName, activeSocketCount: this.activeSockets.size }, 'Reached timeout but there are still active sockets');
+      logger.debug({
+        domain: this.domain,
+        activeSocketCount: this.activeSockets.size
+      }, 'Reached timeout but there are still active sockets');
       this.resetConnectionTimeout();
       return;
     }
     if (this.cpuAverage > this.stopOnTimeoutIfCpuUsageBelow) {
-      logger.debug({ container: this.containerName, cpuUsageAverage: this.cpuAverage }, 'Reached timeout but the container cpu usage is above the minimum configured');
+      logger.debug({
+        domain: this.domain,
+        container: this.containerName[0],
+        cpuUsageAverage: this.cpuAverage
+      }, 'Reached timeout but the container cpu usage is above the minimum configured');
       this.resetConnectionTimeout();
       return;
     }
@@ -184,7 +227,7 @@ export default class ProxyHost {
 
   public getHeaders(): { [header: string]: string; } {
     return {
-      'x-container-nursery-container-name': this.containerName
+      'x-container-nursery-container-name': this.containerName[0]
     };
   }
 

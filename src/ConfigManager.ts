@@ -8,6 +8,19 @@ import EventEmitter from 'events';
 const defaultProxyListeningPort = 80;
 const placeholderServerListeningPort = 8080;
 
+type ProxyHostConfig = {
+  domain: string
+  containerName: string | string[]
+  proxyHost: string
+  proxyPort: number
+  timeoutSeconds: number
+  stopOnTimeoutIfCpuUsageBelow?: number
+}
+type ApplicationConfig = {
+  proxyListeningPort: number,
+  proxyHosts: ProxyHostConfig[]
+}
+
 export default class ConfigManager {
   private configFile = 'config/config.yml';
   private proxyHosts: Map<string, ProxyHost>;
@@ -23,10 +36,9 @@ export default class ConfigManager {
     this.watch();
   }
 
-  private static parsePort(p: string): number | null {
-    const PORT = parseInt(p, 10);
-    if (Number.isInteger(PORT) && PORT >= 0 && PORT <= 49151) {
-      return PORT;
+  private static parsePort(p: number): number | null {
+    if (Number.isInteger(p) && p >= 0 && p <= 49151) {
+      return p;
     }
 
     logger.warn({ portString: p }, 'Parsing proxy listening port failed! Is a valid value used (0-49151)?');
@@ -47,7 +59,7 @@ export default class ConfigManager {
     }
 
     if (process.env.CN_PORT) {
-      this.proxyListeningPort = ConfigManager.parsePort(process.env.CN_PORT);
+      this.proxyListeningPort = ConfigManager.parsePort(parseInt(process.env.CN_PORT, 10));
       if (this.proxyListeningPort
         && this.proxyListeningPort !== placeholderServerListeningPort) {
         return this.proxyListeningPort;
@@ -75,7 +87,7 @@ export default class ConfigManager {
 
   private parseConfig(): void {
     const fileContent = fs.readFileSync(this.configFile, 'utf-8');
-    const config = YAML.parse(fileContent);
+    const config: ApplicationConfig = YAML.parse(fileContent);
 
     if (!config || !config.proxyHosts) {
       logger.error({ invalidProperty: 'proxyHosts' }, 'Config is invalid, missing property');
@@ -91,19 +103,21 @@ export default class ConfigManager {
     }
   }
 
-  private loadProxyHosts(proxyHosts: Record<string, unknown>[]): void {
+  private loadProxyHosts(proxyHosts: ProxyHostConfig[]): void {
     logger.info('(Re)loading hosts, clearing all existing hosts first');
     this.clearOldProxyHosts();
-    proxyHosts.forEach((proxyHostConfig: Record<string, unknown>) => {
+    proxyHosts.forEach(proxyHostConfig => {
       if (!ConfigManager.validateProxyHost(proxyHostConfig)) {
         logger.error({ proxyHost: proxyHostConfig }, 'Config contains invalid proxyHost object');
       } else {
         const proxyHost = new ProxyHost( // TODO
-          proxyHostConfig.domain as string,
-          proxyHostConfig.containerName as string,
-          proxyHostConfig.proxyHost as string,
-          proxyHostConfig.proxyPort as number,
-          proxyHostConfig.timeoutSeconds as number
+          proxyHostConfig.domain,
+          proxyHostConfig.containerName instanceof Array
+            ? proxyHostConfig.containerName
+            : [proxyHostConfig.containerName],
+          proxyHostConfig.proxyHost,
+          proxyHostConfig.proxyPort,
+          proxyHostConfig.timeoutSeconds
         );
 
         if (proxyHostConfig.stopOnTimeoutIfCpuUsageBelow) {
