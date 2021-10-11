@@ -103,7 +103,7 @@ placeholderServer.use((_, res, next) => {
   res.setHeader('x-powered-by', 'ContainerNursery');
   next();
 });
-placeholderServer.get('/', (req, res) => {
+placeholderServer.get('*', (req, res) => {
   res.render('placeholder', { containerName: req.headers['x-container-nursery-container-name'] });
 });
 placeholderServer.listen(placeholderServerListeningPort, placeholderServerListeningHost);
