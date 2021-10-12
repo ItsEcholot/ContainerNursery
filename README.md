@@ -12,7 +12,7 @@ To improve the user experience a loading page is presented, which automatically 
 
 The application listens on port `80` by default for HTTP traffic and uses the socket at `/var/run/docker.sock` to connect to the docker daemon.
 
-**This application is currently in beta.**
+You can find the changelog in the [CHANGELOG.md](changelog.md) file.
 
 ## Demo
 
