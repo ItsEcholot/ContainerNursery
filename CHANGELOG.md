@@ -1,5 +1,7 @@
 Changelog
 =========
+**29.11.2021 - v1.5.2** Fixed a bug where misformed docker event payload would crash ContainerNursery when trying to parse JSON. Thanks to Alfy1080 on the Unraid Forums for the Bug report.
+
 **12.10.2021 - v1.5.1** Fixed a bug where the loading page wouldn't be displayed when a path other than `/` is requested. Thanks to @JamesDAdams on GitHub for the Bug report.
 
 **29.09.2021 - v1.5.0** Added the ability to stop (and start) multiple containers per proxy host. This is useful if the application supports multiple containers. The first container in the list is the main container, which is used to check if the container is ready and reload the loading page. For usage information check the README.md file on GitHub.
