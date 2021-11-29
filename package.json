@@ -39,14 +39,14 @@
   },
   "dependencies": {
     "chokidar": "^3.5.2",
-    "dockerode": "^3.3.0",
+    "dockerode": "^3.3.1",
     "dotenv": "^10.0.0",
     "ejs": "^3.1.6",
     "express": "^4.17.1",
     "http-proxy": "^1.18.1",
-    "node-fetch": "^2.6.2",
-    "pino": "^7.0.0-rc.4",
-    "pino-pretty": "^7.0.0",
+    "node-fetch": "^2.6.6",
+    "pino": "^7.4.1",
+    "pino-pretty": "^7.2.0",
     "yaml": "^1.10.2"
   }
 }
