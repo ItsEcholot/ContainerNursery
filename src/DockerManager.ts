@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
 import Docker from 'dockerode';
+import logger from './Logger';
 
 export default class DockerManager {
   private docker: Docker;
@@ -33,7 +34,11 @@ export default class DockerManager {
     });
 
     readableStream.on('data', chunk => {
-      eventEmitter.emit('update', JSON.parse(chunk.toString('utf-8')));
+      try {
+        eventEmitter.emit('update', JSON.parse(chunk.toString('utf-8')));
+      } catch (err) {
+        logger.error(err, 'JSON parsing of Docker Event failed');
+      }
     });
 
     eventEmitter.on('stop-stream', () => {
@@ -49,7 +54,11 @@ export default class DockerManager {
       .stats({ stream: true }) as unknown as NodeJS.ReadableStream;
 
     statsStream.on('data', chunk => {
-      eventEmitter.emit('update', JSON.parse(chunk.toString('utf-8')));
+      try {
+        eventEmitter.emit('update', JSON.parse(chunk.toString('utf-8')));
+      } catch (err) {
+        logger.error(err, 'JSON parsing of Docker Event failed');
+      }
     });
 
     eventEmitter.on('stop-stream', () => {
