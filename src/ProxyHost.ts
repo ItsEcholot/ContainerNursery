@@ -233,7 +233,7 @@ export default class ProxyHost {
 
   public getTarget(): ProxyTarget {
     return {
-      host: this.containerRunning ? this.proxyHost : 'localhost',
+      host: this.containerRunning ? this.proxyHost : '127.0.0.1',
       port: this.containerRunning ? this.proxyPort : 8080
     };
   }
