@@ -7,7 +7,7 @@ import DockerManager from './DockerManager';
 const dockerManager = new DockerManager();
 
 export default class ProxyHost {
-  private domain: string;
+  private domain: string[];
   private containerName: string[];
   private proxyHost: string;
   private proxyPort: number;
@@ -28,7 +28,7 @@ export default class ProxyHost {
   private lastSystemCPUUsage = 0;
 
   constructor(
-    domain: string,
+    domain: string[],
     containerName: string[],
     proxyHost: string,
     proxyPort: number,

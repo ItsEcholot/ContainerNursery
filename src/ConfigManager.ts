@@ -9,7 +9,7 @@ const defaultProxyListeningPort = 80;
 const placeholderServerListeningPort = 8080;
 
 type ProxyHostConfig = {
-  domain: string
+  domain: string | string[]
   containerName: string | string[]
   proxyHost: string
   proxyPort: number
@@ -54,7 +54,8 @@ export default class ConfigManager {
     if (this.proxyListeningPort
       && this.proxyListeningPort !== placeholderServerListeningPort) {
       return this.proxyListeningPort;
-    } if (this.proxyListeningPort === placeholderServerListeningPort) {
+    }
+    if (this.proxyListeningPort === placeholderServerListeningPort) {
       logger.warn({ placeholderServerListeningPort, desiredProxyListeningPort: this.proxyListeningPort }, "Can't use the same port as the internal placeholder server uses");
     }
 
@@ -111,7 +112,9 @@ export default class ConfigManager {
         logger.error({ proxyHost: proxyHostConfig }, 'Config contains invalid proxyHost object');
       } else {
         const proxyHost = new ProxyHost( // TODO
-          proxyHostConfig.domain,
+          proxyHostConfig.domain instanceof Array
+            ? proxyHostConfig.domain
+            : [proxyHostConfig.domain],
           proxyHostConfig.containerName instanceof Array
             ? proxyHostConfig.containerName
             : [proxyHostConfig.containerName],
@@ -124,10 +127,19 @@ export default class ConfigManager {
           proxyHost.stopOnTimeoutIfCpuUsageBelow = proxyHostConfig.stopOnTimeoutIfCpuUsageBelow as number;
         }
 
-        this.proxyHosts.set(
-          proxyHostConfig.domain as string,
-          proxyHost
-        );
+        if (proxyHostConfig.domain instanceof Array) {
+          proxyHostConfig.domain.forEach(domain => {
+            this.proxyHosts.set(
+              domain,
+              proxyHost
+            );
+          });
+        } else {
+          this.proxyHosts.set(
+            proxyHostConfig.domain as string,
+            proxyHost
+          );
+        }
       }
     });
   }
