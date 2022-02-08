@@ -1,5 +1,7 @@
 Changelog
 =========
+**08.02.2021 - v1.6.0** Added the ability to add multiple domains that point to the same proxy host.
+
 **29.11.2021 - v1.5.2** Fixed a bug where misformed docker event payload would crash ContainerNursery when trying to parse JSON. Thanks to Alfy1080 on the Unraid Forums for the Bug report.
 
 **12.10.2021 - v1.5.1** Fixed a bug where the loading page wouldn't be displayed when a path other than `/` is requested. Thanks to @JamesDAdams on GitHub for the Bug report.

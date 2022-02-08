@@ -6,7 +6,9 @@ proxyHosts:
     proxyPort: 5800
     timeoutSeconds: 15
     stopOnTimeoutIfCpuUsageBelow: 50
-  - domain: wordpress.yourdomain.io
+  - domain: 
+      - wordpress.yourdomain.io
+      - wordpress.otherdomain.io
     containerName: 
       - wordpress
       - mariadb

@@ -54,7 +54,7 @@ The following properties are required:
 
 Property | Meaning
 ---------|--------|
-`domain` | For which domain to listen for (equals the `host` header)
+`domain` | Array or string containing domain(s) to listen for (equals the `host` header)
 `containerName` | Array or string of which container(s) (by name or id) to start and stop. ContainerNursery can start and stop multiple containers for a single proxy host. The first container in the list (main container) is used to check if the application is ready and reload the loading page. Note however that CN doesn't manage the timing of how the containers are started (database before app etc.).
 `proxyHost` | Domain / IP of container (use custom Docker bridge networks for dynDNS using the name of the container)
 `proxyPort` | Port on which the containers webserver listens on
@@ -76,7 +76,9 @@ proxyHosts:
     proxyPort: 5800
     timeoutSeconds: 600
     stopOnTimeoutIfCpuUsageBelow: 50
-  - domain: whatever.yourdomain.io
+  - domain: 
+      - wordpress.yourdomain.io
+      - wordpress.otherdomain.io
     containerName: 
       - wordpress
       - mariadb
