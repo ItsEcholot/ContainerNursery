@@ -3,7 +3,7 @@
 
 <p align="center">
   <img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/ItsEcholot/ContainerNursery">
-  <img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2021">
+  <img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2022">
 </p>
 
 Written in Node.js, this application acts as a HTTP reverse proxy and stops Docker containers which haven't been accessed recently and starts them again when a new request comes in. ContainerNursery also makes sure there are no more active WebSocket connections before stopping the container.
