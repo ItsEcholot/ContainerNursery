@@ -13,6 +13,7 @@ type ProxyHostConfig = {
   containerName: string | string[]
   proxyHost: string
   proxyPort: number
+  proxyUseHttps: boolean
   timeoutSeconds: number
   stopOnTimeoutIfCpuUsageBelow?: number
 }
@@ -122,6 +123,10 @@ export default class ConfigManager {
           proxyHostConfig.proxyPort,
           proxyHostConfig.timeoutSeconds
         );
+
+        if (proxyHostConfig.proxyUseHttps) {
+          proxyHost.proxyUseHttps = proxyHostConfig.proxyUseHttps;
+        }
 
         if (proxyHostConfig.stopOnTimeoutIfCpuUsageBelow) {
           proxyHost.stopOnTimeoutIfCpuUsageBelow = proxyHostConfig.stopOnTimeoutIfCpuUsageBelow as number;

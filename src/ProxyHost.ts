@@ -11,6 +11,7 @@ export default class ProxyHost {
   private containerName: string[];
   private proxyHost: string;
   private proxyPort: number;
+  public proxyUseHttps = false;
   private timeoutSeconds: number;
   public stopOnTimeoutIfCpuUsageBelow = Infinity;
 
@@ -39,7 +40,8 @@ export default class ProxyHost {
       container: containerName,
       proxy: {
         host: proxyHost,
-        port: proxyPort
+        port: proxyPort,
+        useHttps: this.proxyUseHttps
       },
       timeoutSeconds: timeoutSeconds
     }, 'Added proxy host');
@@ -138,7 +140,7 @@ export default class ProxyHost {
     const checkInterval = setInterval(() => {
       this.resetConnectionTimeout();
 
-      fetch(`http://${this.proxyHost}:${this.proxyPort}`, {
+      fetch(`http${this.proxyUseHttps ? 's' : ''}://${this.proxyHost}:${this.proxyPort}`, {
         method: 'HEAD'
       }).then(res => {
         logger.debug({
@@ -233,6 +235,7 @@ export default class ProxyHost {
 
   public getTarget(): ProxyTarget {
     return {
+      protocol: this.proxyUseHttps && this.containerRunning ? 'https:' : 'http:',
       host: this.containerRunning ? this.proxyHost : '127.0.0.1',
       port: this.containerRunning ? this.proxyPort : 8080
     };
