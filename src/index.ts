@@ -6,16 +6,33 @@ import logger from './Logger';
 import ConfigManager from './ConfigManager';
 import ProxyHost from './ProxyHost';
 
+// Disable TLS certificate verification for the targets of the proxy server
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const proxyHosts: Map<string, ProxyHost> = new Map();
 // eslint-disable-next-line no-unused-vars
 const configManager = new ConfigManager(proxyHosts);
 const proxy = createProxyServer({
-  xfwd: true
+  xfwd: true,
+  secure: false
 });
 
-var proxyListeningPort = configManager.getProxyListeningPort();
+let proxyListeningPort = configManager.getProxyListeningPort();
 const placeholderServerListeningPort = 8080;
 const placeholderServerListeningHost = '127.0.0.1';
+
+// Remove secure tag from cookies
+proxy.on('proxyRes', (proxyRes) => {
+  const sc = proxyRes.headers['set-cookie'];
+  if (Array.isArray(sc)) {
+    // eslint-disable-next-line no-param-reassign
+    proxyRes.headers['set-cookie'] = sc.map(str => {
+      return str.split(';')
+        .filter(v => v.trim().toLowerCase() !== 'secure')
+        .join('; ');
+    });
+  }
+});
 
 const stripPortHostHeader = (host: string | undefined): string | undefined => {
   if (!host) return host;

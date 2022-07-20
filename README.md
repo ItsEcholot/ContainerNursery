@@ -52,19 +52,20 @@ The virtual hosts the proxy should handle can be configured by adding an object 
 
 The following properties are required:
 
-Property | Meaning
----------|--------|
-`domain` | Array or string containing domain(s) to listen for (equals the `host` header)
-`containerName` | Array or string of which container(s) (by name or id) to start and stop. ContainerNursery can start and stop multiple containers for a single proxy host. The first container in the list (main container) is used to check if the application is ready and reload the loading page. Note however that CN doesn't manage the timing of how the containers are started (database before app etc.).
-`proxyHost` | Domain / IP of container (use custom Docker bridge networks for dynDNS using the name of the container)
-`proxyPort` | Port on which the containers webserver listens on
-`timeoutSeconds` | Seconds after which the container should be stopped. The internal timeout gets reset to this configured value every time a new HTTP request is made, or when the timer runs out while a Websocket connection is still active.
+| Property         | Meaning                                                                                                                                                                                                                                                                                                                                                                                           |
+|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `domain`         | Array or string containing domain(s) to listen for (equals the `host` header)                                                                                                                                                                                                                                                                                                                     |
+| `containerName`  | Array or string of which container(s) (by name or id) to start and stop. ContainerNursery can start and stop multiple containers for a single proxy host. The first container in the list (main container) is used to check if the application is ready and reload the loading page. Note however that CN doesn't manage the timing of how the containers are started (database before app etc.). |
+| `proxyHost`      | Domain / IP of container (use custom Docker bridge networks for dynDNS using the name of the container)                                                                                                                                                                                                                                                                                           |
+| `proxyPort`      | Port on which the containers webserver listens on                                                                                                                                                                                                                                                                                                                                                 |
+| `timeoutSeconds` | Seconds after which the container should be stopped. The internal timeout gets reset to this configured value every time a new HTTP request is made, or when the timer runs out while a Websocket connection is still active.                                                                                                                                                                     |
 
 The following properties are optional:
 
-Property | Meaning
----------|--------|
-`stopOnTimeoutIfCpuUsageBelow` | If set, prevents the container from stopping when reaching the configured timeout if the averaged CPU usage (percentage between 0 and 100*core count) of the **main** container (first in the list of container names) is above this value. This is great for containers that should remain running while their doing intensive work even when nobody is doing any http requests, for example handbrake.
+| Property                       | Meaning                                                                                                                                                                                                                                                                                                                                                                                                  |
+|--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `proxyUseHttps`                | Boolean indicating if the proxy should use HTTPS to connect to the container. Defaults to `false`. This should only be used if the container only accepts HTTPS requests. It provides no additional security.                                                                                                                                                                                            |
+| `stopOnTimeoutIfCpuUsageBelow` | If set, prevents the container from stopping when reaching the configured timeout if the averaged CPU usage (percentage between 0 and 100*core count) of the **main** container (first in the list of container names) is above this value. This is great for containers that should remain running while their doing intensive work even when nobody is doing any http requests, for example handbrake. |
 
 ### Example Configuration
 ```yaml
@@ -74,16 +75,17 @@ proxyHosts:
     containerName: handbrake
     proxyHost: localhost
     proxyPort: 5800
-    timeoutSeconds: 600
+    timeoutSeconds: 15
     stopOnTimeoutIfCpuUsageBelow: 50
-  - domain: 
+  - domain:
       - wordpress.yourdomain.io
       - wordpress.otherdomain.io
-    containerName: 
+    containerName:
       - wordpress
       - mariadb
     proxyHost: wordpress
     proxyPort: 3000
+    proxyUseHttps: true
     timeoutSeconds: 1800
 ```
 
@@ -98,8 +100,8 @@ Now point your existing reverse proxy for the hosts you configured in the previo
 ### Environment Variables
 Additionally to the configuration done in the `congif.yml` file, there are a few settings which can only be configured by using environment variables.
 
-Name | Valid Values | Description
------|--------------|------------
-`CN_LOG_JSON` | `true` / `false` | If set to `true` all logging is done in a machine readable format (JSON). Defaults to `false`.
-`CN_LOG_LEVEL` | `debug` / `info` / `warn` / `error` | Sets the minimum log level. Log entries below this importance level won't be printed to the console. Defaults to `info`.
-`CN_PORT` | `integer` | Sets the port ContainerNursery listens on for new http connections. The `proxyListeningPort` option in the `config.yml` file takes precedence if both are set. Defaults to `80` if no value is set.
+| Name           | Valid Values                        | Description                                                                                                                                                                                         |
+|----------------|-------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CN_LOG_JSON`  | `true` / `false`                    | If set to `true` all logging is done in a machine readable format (JSON). Defaults to `false`.                                                                                                      |
+| `CN_LOG_LEVEL` | `debug` / `info` / `warn` / `error` | Sets the minimum log level. Log entries below this importance level won't be printed to the console. Defaults to `info`.                                                                            |
+| `CN_PORT`      | `integer`                           | Sets the port ContainerNursery listens on for new http connections. The `proxyListeningPort` option in the `config.yml` file takes precedence if both are set. Defaults to `80` if no value is set. |

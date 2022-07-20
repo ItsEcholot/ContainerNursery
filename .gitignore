@@ -111,3 +111,6 @@ config/config.yml
 
 # Dev Env
 .devcontainer
+
+# IntelliJ configuration
+.idea
