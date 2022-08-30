@@ -1,6 +1,8 @@
 Changelog
 =========
-**08.02.2021 - v1.6.0** Added the ability to add multiple domains that point to the same proxy host.
+**30.08.2022 - v1.7.0** Added the ability to proxy traffic to containers using HTTPS, while ignoring their certificate. This is for services which only listen for SSL requests. This does **not** provide any security over normal http proxying.
+
+**08.02.2022 - v1.6.0** Added the ability to add multiple domains that point to the same proxy host.
 
 **29.11.2021 - v1.5.2** Fixed a bug where misformed docker event payload would crash ContainerNursery when trying to parse JSON. Thanks to Alfy1080 on the Unraid Forums for the Bug report.
 
