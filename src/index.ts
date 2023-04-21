@@ -72,11 +72,7 @@ const proxyServer = createServer((req, res) => {
 
   for (let i = 0; i < urlParts.length; i += 1) {
     proxyHost = proxyHosts.get(req.headers.host + urlParts.filter((_, j) => j <= i).join('/'));
-
-    if (proxyHost) {
-      req.url = urlParts.filter((_, j) => j > i).join('/');
-      break;
-    }
+    if (proxyHost) break;
   }
 
   if (!proxyHost) {
@@ -101,9 +97,17 @@ proxyServer.on('upgrade', (req, socket, head) => {
     logger.warn('Socket upgrade failed, request header host not specified');
     return;
   }
-  const proxyHost = proxyHosts.get(req.headers.host);
+
+  let proxyHost;
+  const urlParts = req.url ? req.url.split('/') : [''];
+
+  for (let i = 0; i < urlParts.length; i += 1) {
+    proxyHost = proxyHosts.get(req.headers.host + urlParts.filter((_, j) => j <= i).join('/'));
+    if (proxyHost) break;
+  }
+
   if (!proxyHost) {
-    logger.warn({ host: req.headers.host }, 'Socket upgrade failed, proxy configuration missing');
+    logger.warn({ host: req.headers.host, url: req.url }, 'Socket upgrade failed, proxy configuration missing');
     return;
   }
 
@@ -112,7 +116,9 @@ proxyServer.on('upgrade', (req, socket, head) => {
     target: proxyHost.getTarget(),
     headers: proxyHost.getHeaders()
   });
-  logger.debug({ host: req.headers.host, target: proxyHost.getTarget(), headers: proxyHost.getHeaders() }, 'Proxied Upgrade request');
+  logger.debug({
+    host: req.headers.host, url: req.url, target: proxyHost.getTarget(), headers: proxyHost.getHeaders()
+  }, 'Proxied Upgrade request');
 });
 
 proxyServer.listen(proxyListeningPort);

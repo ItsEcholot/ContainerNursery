@@ -107,7 +107,7 @@
 
   <script>
     setInterval(() => {
-      fetch('/', {
+      fetch(window.location.pathname, {
         method: 'HEAD'
       }).then(res => {
         if (!res.headers.has('X-Powered-By') || res.headers.get('X-Powered-By') !== 'ContainerNursery') {
