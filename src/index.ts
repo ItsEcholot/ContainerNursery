@@ -70,7 +70,7 @@ const proxyServer = createServer((req, res) => {
   let proxyHost;
   const urlParts = req.url ? req.url.split('/') : [''];
 
-  for (let i = 0; i < urlParts.length; i += 1) {
+  for (let i = urlParts.length - 1; i >= 0; i -= 1) {
     proxyHost = proxyHosts.get(req.headers.host + urlParts.filter((_, j) => j <= i).join('/'));
     if (proxyHost) break;
   }
@@ -101,7 +101,7 @@ proxyServer.on('upgrade', (req, socket, head) => {
   let proxyHost;
   const urlParts = req.url ? req.url.split('/') : [''];
 
-  for (let i = 0; i < urlParts.length; i += 1) {
+  for (let i = urlParts.length - 1; i >= 0; i -= 1) {
     proxyHost = proxyHosts.get(req.headers.host + urlParts.filter((_, j) => j <= i).join('/'));
     if (proxyHost) break;
   }
