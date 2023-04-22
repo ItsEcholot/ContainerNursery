@@ -151,7 +151,7 @@ export default class ProxyHost {
           headers: res.headers
         }, 'Checked if target is ready');
 
-        if (res.status === 200 || (res.status >= 300 && res.status <= 399)) {
+        if (res.status === 200 || (res.status >= 300 && res.status <= 399) || res.status === 404) {
           clearInterval(checkInterval);
           this.containerReadyChecking = false;
           this.containerRunning = true;
