@@ -128,7 +128,7 @@ export default class ConfigManager {
         if (proxyHostConfig.proxyUseHttps) {
           proxyHost.proxyUseHttps = proxyHostConfig.proxyUseHttps;
         }
-        
+
         if (proxyHostConfig.proxyUseCustomMethod) {
           proxyHost.proxyUseCustomMethod = proxyHostConfig.proxyUseCustomMethod;
         }

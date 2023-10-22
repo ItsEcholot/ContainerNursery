@@ -3,7 +3,7 @@
 
 <p align="center">
   <img alt="GitHub package.json version" src="https://img.shields.io/github/package-json/v/ItsEcholot/ContainerNursery">
-  <img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2022">
+  <img alt="Maintenance" src="https://img.shields.io/maintenance/yes/2023">
 </p>
 
 Written in Node.js, this application acts as a HTTP reverse proxy and stops Docker containers which haven't been accessed recently and starts them again when a new request comes in. ContainerNursery also makes sure there are no more active WebSocket connections before stopping the container.
@@ -66,6 +66,7 @@ The following properties are optional:
 |--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `proxyUseHttps`                | Boolean indicating if the proxy should use HTTPS to connect to the container. Defaults to `false`. This should only be used if the container only accepts HTTPS requests. It provides no additional security.                                                                                                                                                                                            |
 | `stopOnTimeoutIfCpuUsageBelow` | If set, prevents the container from stopping when reaching the configured timeout if the averaged CPU usage (percentage between 0 and 100*core count) of the **main** container (first in the list of container names) is above this value. This is great for containers that should remain running while their doing intensive work even when nobody is doing any http requests, for example handbrake. |
+| `proxyUseCustomMethod` | Can be set to a HTTP method (`HEAD`,`GET`, ...) which should be used for the ready check. Some services only respond to certain HTTP methods correctly. |
 
 ### Example Configuration
 ```yaml
@@ -77,6 +78,7 @@ proxyHosts:
     proxyPort: 5800
     timeoutSeconds: 15
     stopOnTimeoutIfCpuUsageBelow: 50
+    proxyUseCustomMethod: GET
   - domain:
       - wordpress.yourdomain.io
       - wordpress.otherdomain.io
