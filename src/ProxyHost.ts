@@ -12,6 +12,7 @@ export default class ProxyHost {
   private proxyHost: string;
   private proxyPort: number;
   public proxyUseHttps = false;
+  public proxyUseCustomMethod: string | undefined;
   private timeoutSeconds: number;
   public stopOnTimeoutIfCpuUsageBelow = Infinity;
 
@@ -141,7 +142,7 @@ export default class ProxyHost {
       this.resetConnectionTimeout();
 
       fetch(`http${this.proxyUseHttps ? 's' : ''}://${this.proxyHost}:${this.proxyPort}`, {
-        method: 'HEAD'
+        method: this.proxyUseCustomMethod ?? 'HEAD'
       }).then(res => {
         logger.debug({
           domain: this.domain,
