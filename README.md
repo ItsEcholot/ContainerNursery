@@ -56,6 +56,7 @@ The following properties are required:
 |------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `domain`         | Array or string containing domain(s) to listen for (equals the `host` header)                                                                                                                                                                                                                                                                                                                     |
 | `containerName`  | Array or string of which container(s) (by name or id) to start and stop. ContainerNursery can start and stop multiple containers for a single proxy host. The first container in the list (main container) is used to check if the application is ready and reload the loading page. Note however that CN doesn't manage the timing of how the containers are started (database before app etc.). |
+| `fancyName`      | The name (of the service) that should be displayed on the waiting page                                                                                                            |
 | `proxyHost`      | Domain / IP of container (use custom Docker bridge networks for dynDNS using the name of the container)                                                                                                                                                                                                                                                                                           |
 | `proxyPort`      | Port on which the containers webserver listens on                                                                                                                                                                                                                                                                                                                                                 |
 | `timeoutSeconds` | Seconds after which the container should be stopped. The internal timeout gets reset to this configured value every time a new HTTP request is made, or when the timer runs out while a Websocket connection is still active.                                                                                                                                                                     |
@@ -74,6 +75,7 @@ proxyListeningPort: 80
 proxyHosts:
   - domain: handbrake.yourdomain.io
     containerName: handbrake
+    fancyName: Handbrake
     proxyHost: localhost
     proxyPort: 5800
     timeoutSeconds: 15
