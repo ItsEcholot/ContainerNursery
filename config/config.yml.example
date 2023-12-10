@@ -2,7 +2,7 @@ proxyListeningPort: 80
 proxyHosts:
   - domain: handbrake.yourdomain.io
     containerName: handbrake
-    fancyName: Handbrake
+    displayName: Handbrake
     proxyHost: localhost
     proxyPort: 5800
     timeoutSeconds: 15
