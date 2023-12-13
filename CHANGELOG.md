@@ -1,5 +1,7 @@
 Changelog
 =========
+**13.12.2023 - v1.9.0** Added the ability to define the name which should be displayed on the waiting page. Contributed by @Samurai1201 in #55.
+
 **22.10.2023 - v1.8.0** Added the ability to define which HTTP method should be used during the ready check. Contributed by @Howard3 in #53.
 
 **30.08.2022 - v1.7.0** Added the ability to proxy traffic to containers using HTTPS, while ignoring their certificate. This is for services which only listen for SSL requests. This does **not** provide any security over normal http proxying.
