@@ -232,8 +232,9 @@ export default class ProxyHost {
   }
 
   public getHeaders(): { [header: string]: string; } {
+    const nameToUse = this.displayName[0] ?? this.containerName[0];
     return {
-      'x-container-nursery-container-name': this.displayName[0]
+      'x-container-nursery-container-name': nameToUse
     };
   }
 
