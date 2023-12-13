@@ -9,6 +9,7 @@ const dockerManager = new DockerManager();
 export default class ProxyHost {
   private domain: string[];
   private containerName: string[];
+  private displayName: string[];
   private proxyHost: string;
   private proxyPort: number;
   public proxyUseHttps = false;
@@ -32,6 +33,7 @@ export default class ProxyHost {
   constructor(
     domain: string[],
     containerName: string[],
+    displayName: string[],
     proxyHost: string,
     proxyPort: number,
     timeoutSeconds: number
@@ -49,6 +51,7 @@ export default class ProxyHost {
 
     this.domain = domain;
     this.containerName = containerName;
+    this.displayName = displayName;
     this.proxyHost = proxyHost;
     this.proxyPort = proxyPort;
     this.timeoutSeconds = timeoutSeconds;
@@ -229,8 +232,9 @@ export default class ProxyHost {
   }
 
   public getHeaders(): { [header: string]: string; } {
+    const nameToUse = this.displayName[0] ?? this.containerName[0];
     return {
-      'x-container-nursery-container-name': this.containerName[0]
+      'x-container-nursery-container-name': nameToUse
     };
   }
 

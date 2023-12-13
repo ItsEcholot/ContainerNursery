@@ -11,6 +11,7 @@ const placeholderServerListeningPort = 8080;
 type ProxyHostConfig = {
   domain: string | string[]
   containerName: string | string[]
+  displayName: string | string[]
   proxyHost: string
   proxyPort: number
   proxyUseHttps: boolean
@@ -120,6 +121,9 @@ export default class ConfigManager {
           proxyHostConfig.containerName instanceof Array
             ? proxyHostConfig.containerName
             : [proxyHostConfig.containerName],
+          proxyHostConfig.displayName instanceof Array
+            ? proxyHostConfig.displayName
+            : [proxyHostConfig.displayName],
           proxyHostConfig.proxyHost,
           proxyHostConfig.proxyPort,
           proxyHostConfig.timeoutSeconds

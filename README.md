@@ -64,6 +64,7 @@ The following properties are optional:
 
 | Property                       | Meaning                                                                                                                                                                                                                                                                                                                                                                                                  |
 |--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `displayName`      | The name (of the service) that should be displayed on the waiting page                                                                                                            |
 | `proxyUseHttps`                | Boolean indicating if the proxy should use HTTPS to connect to the container. Defaults to `false`. This should only be used if the container only accepts HTTPS requests. It provides no additional security.                                                                                                                                                                                            |
 | `stopOnTimeoutIfCpuUsageBelow` | If set, prevents the container from stopping when reaching the configured timeout if the averaged CPU usage (percentage between 0 and 100*core count) of the **main** container (first in the list of container names) is above this value. This is great for containers that should remain running while their doing intensive work even when nobody is doing any http requests, for example handbrake. |
 | `proxyUseCustomMethod` | Can be set to a HTTP method (`HEAD`,`GET`, ...) which should be used for the ready check. Some services only respond to certain HTTP methods correctly. |
@@ -74,6 +75,7 @@ proxyListeningPort: 80
 proxyHosts:
   - domain: handbrake.yourdomain.io
     containerName: handbrake
+    displayName: Handbrake
     proxyHost: localhost
     proxyPort: 5800
     timeoutSeconds: 15
